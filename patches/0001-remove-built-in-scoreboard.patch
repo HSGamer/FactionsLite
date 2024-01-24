@@ -1,0 +1,1278 @@
+From a9fc1419647df4e9356c9fe6c822fb1064bff0d2 Mon Sep 17 00:00:00 2001
+From: hsgamer <huynhqtienvtag@gmail.com>
+Date: Wed, 24 Jan 2024 13:09:24 +0700
+Subject: [PATCH] remove built-in scoreboard
+
+---
+ .../massivecraft/factions/FactionsPlugin.java |   1 -
+ .../massivecraft/factions/cmd/CmdDisband.java |   2 -
+ .../massivecraft/factions/cmd/CmdHelp.java    |   1 -
+ .../com/massivecraft/factions/cmd/CmdSB.java  |  35 ---
+ .../com/massivecraft/factions/cmd/CmdTag.java |   3 -
+ .../massivecraft/factions/cmd/FCmdRoot.java   |   2 -
+ .../cmd/relations/FRelationCommand.java       |   4 -
+ .../factions/config/file/MainConfig.java      | 152 -----------
+ .../factions/data/MemoryFPlayer.java          |  16 --
+ .../listeners/FactionsPlayerListener.java     |  24 --
+ .../scoreboards/BufferedObjective.java        | 233 -----------------
+ .../factions/scoreboards/FScoreboard.java     | 152 -----------
+ .../scoreboards/FSidebarProvider.java         |  41 ---
+ .../factions/scoreboards/FTeamWrapper.java    | 237 ------------------
+ .../scoreboards/sidebar/FDefaultSidebar.java  |  69 -----
+ .../scoreboards/sidebar/FInfoSidebar.java     |  44 ----
+ 16 files changed, 1016 deletions(-)
+ delete mode 100644 src/main/java/com/massivecraft/factions/cmd/CmdSB.java
+ delete mode 100644 src/main/java/com/massivecraft/factions/scoreboards/BufferedObjective.java
+ delete mode 100644 src/main/java/com/massivecraft/factions/scoreboards/FScoreboard.java
+ delete mode 100644 src/main/java/com/massivecraft/factions/scoreboards/FSidebarProvider.java
+ delete mode 100644 src/main/java/com/massivecraft/factions/scoreboards/FTeamWrapper.java
+ delete mode 100644 src/main/java/com/massivecraft/factions/scoreboards/sidebar/FDefaultSidebar.java
+ delete mode 100644 src/main/java/com/massivecraft/factions/scoreboards/sidebar/FInfoSidebar.java
+
+diff --git a/src/main/java/com/massivecraft/factions/FactionsPlugin.java b/src/main/java/com/massivecraft/factions/FactionsPlugin.java
+index 5df6eb80..7943586c 100644
+--- a/src/main/java/com/massivecraft/factions/FactionsPlugin.java
++++ b/src/main/java/com/massivecraft/factions/FactionsPlugin.java
+@@ -728,7 +728,6 @@ public class FactionsPlugin extends JavaPlugin implements FactionsAPI {
+ 
+         // Overall stats
+         this.metricsLine("factions", () -> Factions.getInstance().getAllFactions().size() - 3);
+-        this.metricsSimplePie("scoreboard", () -> "" + conf().scoreboard().constant().isEnabled());
+ 
+         // Event listeners
+         this.metricsDrillPie("event_listeners", () -> {
+diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdDisband.java b/src/main/java/com/massivecraft/factions/cmd/CmdDisband.java
+index 16050f11..ed176159 100644
+--- a/src/main/java/com/massivecraft/factions/cmd/CmdDisband.java
++++ b/src/main/java/com/massivecraft/factions/cmd/CmdDisband.java
+@@ -9,7 +9,6 @@ import com.massivecraft.factions.event.FPlayerLeaveEvent;
+ import com.massivecraft.factions.event.FactionDisbandEvent;
+ import com.massivecraft.factions.integration.Econ;
+ import com.massivecraft.factions.perms.PermissibleActions;
+-import com.massivecraft.factions.scoreboards.FTeamWrapper;
+ import com.massivecraft.factions.struct.Permission;
+ import com.massivecraft.factions.util.TL;
+ import org.bukkit.Bukkit;
+@@ -98,7 +97,6 @@ public class CmdDisband extends FCommand {
+         }
+ 
+         Factions.getInstance().removeFaction(faction.getId());
+-        FTeamWrapper.applyUpdates(faction);
+     }
+ 
+     @Override
+diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdHelp.java b/src/main/java/com/massivecraft/factions/cmd/CmdHelp.java
+index cd8bbfe9..d57c8ca9 100644
+--- a/src/main/java/com/massivecraft/factions/cmd/CmdHelp.java
++++ b/src/main/java/com/massivecraft/factions/cmd/CmdHelp.java
+@@ -112,7 +112,6 @@ public class CmdHelp extends FCommand {
+         pageLines.add(FCmdRoot.getInstance().cmdMod.getUsageTemplate(context, true));
+         pageLines.add(FCmdRoot.getInstance().cmdAdmin.getUsageTemplate(context, true));
+         pageLines.add(FCmdRoot.getInstance().cmdTitle.getUsageTemplate(context, true));
+-        pageLines.add(FCmdRoot.getInstance().cmdSB.getUsageTemplate(context, true));
+         pageLines.add(FCmdRoot.getInstance().cmdSeeChunk.getUsageTemplate(context, true));
+         pageLines.add(FCmdRoot.getInstance().cmdStatus.getUsageTemplate(context, true));
+         pageLines.add(plugin.txt().parse(TL.COMMAND_HELP_PLAYERTITLES.toString()));
+diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdSB.java b/src/main/java/com/massivecraft/factions/cmd/CmdSB.java
+deleted file mode 100644
+index 3e70f1a1..00000000
+--- a/src/main/java/com/massivecraft/factions/cmd/CmdSB.java
++++ /dev/null
+@@ -1,35 +0,0 @@
+-package com.massivecraft.factions.cmd;
+-
+-import com.massivecraft.factions.scoreboards.FScoreboard;
+-import com.massivecraft.factions.struct.Permission;
+-import com.massivecraft.factions.util.TL;
+-
+-public class CmdSB extends FCommand {
+-
+-    public CmdSB() {
+-        this.aliases.add("sb");
+-        this.aliases.add("scoreboard");
+-
+-        this.requirements = new CommandRequirements.Builder(Permission.SCOREBOARD)
+-                .playerOnly()
+-                .build();
+-    }
+-
+-    @Override
+-    public void perform(CommandContext context) {
+-        boolean toggleTo = !context.fPlayer.showScoreboard();
+-        FScoreboard board = FScoreboard.get(context.fPlayer);
+-        if (board == null) {
+-            context.player.sendMessage(TL.COMMAND_TOGGLESB_DISABLED.toString());
+-        } else {
+-            context.player.sendMessage(TL.TOGGLE_SB.toString().replace("{value}", String.valueOf(toggleTo)));
+-            board.setSidebarVisibility(toggleTo);
+-        }
+-        context.fPlayer.setShowScoreboard(toggleTo);
+-    }
+-
+-    @Override
+-    public TL getUsageTranslation() {
+-        return TL.COMMAND_SCOREBOARD_DESCRIPTION;
+-    }
+-}
+diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdTag.java b/src/main/java/com/massivecraft/factions/cmd/CmdTag.java
+index 7449a700..8e881852 100644
+--- a/src/main/java/com/massivecraft/factions/cmd/CmdTag.java
++++ b/src/main/java/com/massivecraft/factions/cmd/CmdTag.java
+@@ -7,7 +7,6 @@ import com.massivecraft.factions.Factions;
+ import com.massivecraft.factions.FactionsPlugin;
+ import com.massivecraft.factions.event.FactionRenameEvent;
+ import com.massivecraft.factions.perms.Role;
+-import com.massivecraft.factions.scoreboards.FTeamWrapper;
+ import com.massivecraft.factions.struct.Permission;
+ import com.massivecraft.factions.util.MiscUtil;
+ import com.massivecraft.factions.util.TL;
+@@ -78,8 +77,6 @@ public class CmdTag extends FCommand {
+                 fplayer.msg(TL.COMMAND_TAG_CHANGED, context.fPlayer.getColorStringTo(faction) + oldtag, context.faction.getTag(faction));
+             }
+         }
+-
+-        FTeamWrapper.updatePrefixes(context.faction);
+     }
+ 
+     @Override
+diff --git a/src/main/java/com/massivecraft/factions/cmd/FCmdRoot.java b/src/main/java/com/massivecraft/factions/cmd/FCmdRoot.java
+index b94ea186..e69242fb 100644
+--- a/src/main/java/com/massivecraft/factions/cmd/FCmdRoot.java
++++ b/src/main/java/com/massivecraft/factions/cmd/FCmdRoot.java
+@@ -99,7 +99,6 @@ public class FCmdRoot extends FCommand implements CommandExecutor {
+     public final CmdUnclaimall cmdUnclaimall = new CmdUnclaimall();
+     public final CmdVersion cmdVersion = new CmdVersion();
+     public final CmdWarunclaimall cmdWarunclaimall = new CmdWarunclaimall();
+-    public final CmdSB cmdSB = new CmdSB();
+     public final CmdShowInvites cmdShowInvites = new CmdShowInvites();
+     public final CmdAnnounce cmdAnnounce = new CmdAnnounce();
+     public final CmdSeeChunk cmdSeeChunk = new CmdSeeChunk();
+@@ -194,7 +193,6 @@ public class FCmdRoot extends FCommand implements CommandExecutor {
+         this.addSubCommand(this.cmdUnclaimall);
+         this.addSubCommand(this.cmdVersion);
+         this.addSubCommand(this.cmdWarunclaimall);
+-        this.addSubCommand(this.cmdSB);
+         this.addSubCommand(this.cmdShowInvites);
+         this.addSubCommand(this.cmdAnnounce);
+         this.addSubCommand(this.cmdSeeChunk);
+diff --git a/src/main/java/com/massivecraft/factions/cmd/relations/FRelationCommand.java b/src/main/java/com/massivecraft/factions/cmd/relations/FRelationCommand.java
+index 7656bd8a..14c6922c 100644
+--- a/src/main/java/com/massivecraft/factions/cmd/relations/FRelationCommand.java
++++ b/src/main/java/com/massivecraft/factions/cmd/relations/FRelationCommand.java
+@@ -9,7 +9,6 @@ import com.massivecraft.factions.event.FactionRelationEvent;
+ import com.massivecraft.factions.event.FactionRelationWishEvent;
+ import com.massivecraft.factions.perms.Relation;
+ import com.massivecraft.factions.perms.Role;
+-import com.massivecraft.factions.scoreboards.FTeamWrapper;
+ import com.massivecraft.factions.struct.Permission;
+ import com.massivecraft.factions.util.TL;
+ import org.bukkit.Bukkit;
+@@ -98,9 +97,6 @@ public abstract class FRelationCommand extends FCommand {
+             them.msg(TL.COMMAND_RELATIONS_PEACEFULOTHER);
+             context.faction.msg(TL.COMMAND_RELATIONS_PEACEFUL);
+         }
+-
+-        FTeamWrapper.updatePrefixes(context.faction);
+-        FTeamWrapper.updatePrefixes(them);
+     }
+ 
+     private boolean hasMaxRelations(Faction them, Relation targetRelation, CommandContext context) {
+diff --git a/src/main/java/com/massivecraft/factions/config/file/MainConfig.java b/src/main/java/com/massivecraft/factions/config/file/MainConfig.java
+index 21f40018..ce7d6cec 100644
+--- a/src/main/java/com/massivecraft/factions/config/file/MainConfig.java
++++ b/src/main/java/com/massivecraft/factions/config/file/MainConfig.java
+@@ -2691,153 +2691,6 @@ public class MainConfig {
+         }
+     }
+ 
+-    public class Scoreboard {
+-        public class Constant {
+-            private boolean enabled = false;
+-            @Comment("Can use any placeholders, but does not update once set")
+-            private String title = "Faction Status";
+-            @Comment("If true, show faction prefixes on nametags and in tab list if scoreboard is enabled")
+-            private boolean prefixes = true;
+-            @Comment("Set the length limit for prefixes.\n" +
+-                    "If 0, will use a sane default for your Minecraft version (16 for pre-1.13, 32 for 1.13+).")
+-            private int prefixLength = 0;
+-            @Comment("Takes {relationcolor}, {faction}, player-specific tags, &-prefixed color codes")
+-            private String prefixTemplate = "{relationcolor}[{faction}] &r";
+-
+-            @Comment("If true, show suffixes on nametags and in tab list if scoreboard is enabled")
+-            private boolean suffixes = false;
+-            @Comment("Set the length limit for suffixes.\n" +
+-                    "If 0, will use a sane default for your Minecraft version (16 for pre-1.13, 32 for 1.13+).")
+-            private int suffixLength = 0;
+-            @Comment("Takes {relationcolor}, {faction}, player-specific tags, &-prefixed color codes")
+-            private String suffixTemplate = " {relationcolor}[{faction}]";
+-
+-            private List<String> content = new ArrayList<String>() {
+-                {
+-                    this.add("&6Your Faction");
+-                    this.add("{faction}");
+-                    this.add("&3Your Power");
+-                    this.add("{power}");
+-                    this.add("&aBalance");
+-                    this.add("${balance}");
+-                }
+-            };
+-            private boolean factionlessEnabled = false;
+-            private List<String> factionlessContent = new ArrayList<String>() {
+-                {
+-                    this.add("Make a new Faction");
+-                    this.add("Use /f create");
+-                }
+-            };
+-            private String factionlessTitle = "Status";
+-
+-            public boolean isEnabled() {
+-                return enabled;
+-            }
+-
+-            public String getTitle() {
+-                return title;
+-            }
+-
+-            public boolean isPrefixes() {
+-                return prefixes;
+-            }
+-
+-            public int getPrefixLength() {
+-                return prefixLength < 1 ? (FactionsPlugin.getMCVersion() < 1300 ? 16 : 32) : prefixLength;
+-            }
+-
+-            public String getPrefixTemplate() {
+-                return prefixTemplate;
+-            }
+-
+-            public boolean isSuffixes() {
+-                return suffixes;
+-            }
+-
+-            public int getSuffixLength() {
+-                return suffixLength < 1 ? (FactionsPlugin.getMCVersion() < 1300 ? 16 : 32) : suffixLength;
+-            }
+-
+-            public String getSuffixTemplate() {
+-                return suffixTemplate;
+-            }
+-
+-            public List<String> getContent() {
+-                return content != null ? Collections.unmodifiableList(content) : Collections.emptyList();
+-            }
+-
+-            public boolean isFactionlessEnabled() {
+-                return factionlessEnabled;
+-            }
+-
+-            public List<String> getFactionlessContent() {
+-                return factionlessContent != null ? Collections.unmodifiableList(factionlessContent) : Collections.emptyList();
+-            }
+-
+-            public String getFactionlessTitle() {
+-                return factionlessTitle;
+-            }
+-        }
+-
+-        public class Info {
+-            @Comment("send faction change message as well when scoreboard is up?")
+-            private boolean alsoSendChat = true;
+-            @Comment("How long do we want scoreboards to stay")
+-            private int expiration = 7;
+-            private boolean enabled = false;
+-            @Comment("Supports placeholders")
+-            private List<String> content = new ArrayList<String>() {
+-                {
+-                    this.add("&6Power");
+-                    this.add("{power}");
+-                    this.add("&3Members");
+-                    this.add("{online}/{members}");
+-                    this.add("&4Leader");
+-                    this.add("{leader}");
+-                    this.add("&bTerritory");
+-                    this.add("{chunks}");
+-                }
+-            };
+-            private String title = "{faction-relation-color}{faction}";
+-
+-            public boolean isAlsoSendChat() {
+-                return alsoSendChat;
+-            }
+-
+-            public int getExpiration() {
+-                return expiration;
+-            }
+-
+-            public boolean isEnabled() {
+-                return enabled;
+-            }
+-
+-            public List<String> getContent() {
+-                return content != null ? Collections.unmodifiableList(content) : Collections.emptyList();
+-            }
+-
+-            public String getTitle() {
+-                return title;
+-            }
+-        }
+-
+-        @Comment("Constant scoreboard stays around all the time, displaying status info.\n" +
+-                "Also, if prefixes are enabled while it is enabled, will show prefixes on nametags and tab")
+-        private Constant constant = new Constant();
+-        @Comment("Info scoreboard is displayed when a player walks into a new Faction's territory.\n" +
+-                "Scoreboard disappears after <expiration> seconds.")
+-        private Info info = new Info();
+-
+-        public Constant constant() {
+-            return constant;
+-        }
+-
+-        public Info info() {
+-            return info;
+-        }
+-    }
+-
+     public class LWC {
+         private boolean enabled = true;
+         private boolean resetLocksOnUnclaim = false;
+@@ -3007,7 +2860,6 @@ public class MainConfig {
+     @Comment("Data storage settings")
+     private Data data = new Data();
+     private RestrictWorlds restrictWorlds = new RestrictWorlds();
+-    private Scoreboard scoreboard = new Scoreboard();
+     @Comment("LWC integration\n" +
+             "This support targets the modern fork of LWC, called LWC Extended.\n" +
+             "You can find it here: https://www.spigotmc.org/resources/lwc-extended.69551/\n" +
+@@ -3069,10 +2921,6 @@ public class MainConfig {
+         return restrictWorlds;
+     }
+ 
+-    public Scoreboard scoreboard() {
+-        return scoreboard;
+-    }
+-
+     public MagicPlugin magicPlugin() {
+         return magicPlugin;
+     }
+diff --git a/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java b/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
+index 2e90eec8..7575d611 100644
+--- a/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
++++ b/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
+@@ -22,8 +22,6 @@ import com.massivecraft.factions.landraidcontrol.PowerControl;
+ import com.massivecraft.factions.perms.PermissibleActions;
+ import com.massivecraft.factions.perms.Relation;
+ import com.massivecraft.factions.perms.Role;
+-import com.massivecraft.factions.scoreboards.FScoreboard;
+-import com.massivecraft.factions.scoreboards.sidebar.FInfoSidebar;
+ import com.massivecraft.factions.struct.ChatMode;
+ import com.massivecraft.factions.struct.Permission;
+ import com.massivecraft.factions.tag.Tag;
+@@ -715,25 +713,11 @@ public abstract class MemoryFPlayer implements FPlayer {
+             showChat = FactionsPlugin.getInstance().conf().factions().enterTitles().isAlsoShowChat();
+         }
+ 
+-        if (showInfoBoard(toShow)) {
+-            FScoreboard.get(this).setTemporarySidebar(new FInfoSidebar(toShow));
+-            showChat = FactionsPlugin.getInstance().conf().scoreboard().info().isAlsoSendChat();
+-        }
+         if (showChat) {
+             this.sendMessage(FactionsPlugin.getInstance().txt().parse(TL.FACTION_LEAVE.format(from.getTag(this), toShow.getTag(this))));
+         }
+     }
+ 
+-    /**
+-     * Check if the scoreboard should be shown. Simple method to be used by above method.
+-     *
+-     * @param toShow Faction to be shown.
+-     * @return true if should show, otherwise false.
+-     */
+-    public boolean showInfoBoard(Faction toShow) {
+-        return showScoreboard && !toShow.isWarZone() && !toShow.isWilderness() && !toShow.isSafeZone() && FactionsPlugin.getInstance().conf().scoreboard().info().isEnabled() && FScoreboard.get(this) != null;
+-    }
+-
+     @Override
+     public boolean showScoreboard() {
+         return this.showScoreboard;
+diff --git a/src/main/java/com/massivecraft/factions/listeners/FactionsPlayerListener.java b/src/main/java/com/massivecraft/factions/listeners/FactionsPlayerListener.java
+index d4592fa5..3ca835df 100644
+--- a/src/main/java/com/massivecraft/factions/listeners/FactionsPlayerListener.java
++++ b/src/main/java/com/massivecraft/factions/listeners/FactionsPlayerListener.java
+@@ -8,16 +8,11 @@ import com.massivecraft.factions.Faction;
+ import com.massivecraft.factions.FactionsPlugin;
+ import com.massivecraft.factions.config.file.MainConfig;
+ import com.massivecraft.factions.data.MemoryFPlayer;
+-import com.massivecraft.factions.event.FPlayerJoinEvent;
+-import com.massivecraft.factions.event.FPlayerLeaveEvent;
+ import com.massivecraft.factions.gui.GUI;
+ import com.massivecraft.factions.integration.Graves;
+ import com.massivecraft.factions.perms.PermissibleActions;
+ import com.massivecraft.factions.perms.Relation;
+ import com.massivecraft.factions.perms.Role;
+-import com.massivecraft.factions.scoreboards.FScoreboard;
+-import com.massivecraft.factions.scoreboards.FTeamWrapper;
+-import com.massivecraft.factions.scoreboards.sidebar.FDefaultSidebar;
+ import com.massivecraft.factions.struct.ChatMode;
+ import com.massivecraft.factions.struct.Permission;
+ import com.massivecraft.factions.util.TL;
+@@ -163,12 +158,6 @@ public class FactionsPlayerListener extends AbstractListener {
+             }
+         }.runTaskLater(FactionsPlugin.getInstance(), 33L); // Don't ask me why.
+ 
+-        if (FactionsPlugin.getInstance().conf().scoreboard().constant().isEnabled()) {
+-            FScoreboard.init(me);
+-            FScoreboard.get(me).setDefaultSidebar(new FDefaultSidebar());
+-            FScoreboard.get(me).setSidebarVisibility(me.showScoreboard());
+-        }
+-
+         Faction myFaction = me.getFaction();
+         if (!myFaction.isWilderness()) {
+             for (FPlayer other : myFaction.getFPlayersWhereOnline(true)) {
+@@ -222,8 +211,6 @@ public class FactionsPlayerListener extends AbstractListener {
+             }
+         }
+ 
+-        FScoreboard.remove(me, event.getPlayer());
+-
+         if (FactionsPlugin.getInstance().getSeeChunkUtil() != null) {
+             FactionsPlugin.getInstance().getSeeChunkUtil().updatePlayerInfo(UUID.fromString(me.getId()), false);
+         }
+@@ -595,7 +582,6 @@ public class FactionsPlayerListener extends AbstractListener {
+         FPlayer me = FPlayers.getInstance().getByPlayer(event.getPlayer());
+         boolean isEnabled = plugin.worldUtil().isEnabled(event.getPlayer().getWorld());
+         if (!isEnabled) {
+-            FScoreboard.remove(me, event.getPlayer());
+             if (me.isFlying()) {
+                 me.setFlying(false);
+             }
+@@ -781,16 +767,6 @@ public class FactionsPlayerListener extends AbstractListener {
+         }
+     }
+ 
+-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+-    final public void onFactionJoin(FPlayerJoinEvent event) {
+-        FTeamWrapper.applyUpdatesLater(event.getFaction());
+-    }
+-
+-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+-    public void onFactionLeave(FPlayerLeaveEvent event) {
+-        FTeamWrapper.applyUpdatesLater(event.getFaction());
+-    }
+-
+     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+     public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
+         if (!plugin.worldUtil().isEnabled(event.getPlayer().getWorld())) {
+diff --git a/src/main/java/com/massivecraft/factions/scoreboards/BufferedObjective.java b/src/main/java/com/massivecraft/factions/scoreboards/BufferedObjective.java
+deleted file mode 100644
+index eb68c3d4..00000000
+--- a/src/main/java/com/massivecraft/factions/scoreboards/BufferedObjective.java
++++ /dev/null
+@@ -1,233 +0,0 @@
+-package com.massivecraft.factions.scoreboards;
+-
+-import org.bukkit.ChatColor;
+-import org.bukkit.scoreboard.DisplaySlot;
+-import org.bukkit.scoreboard.Objective;
+-import org.bukkit.scoreboard.Scoreboard;
+-import org.bukkit.scoreboard.Team;
+-
+-import java.lang.reflect.Method;
+-import java.util.ArrayList;
+-import java.util.HashMap;
+-import java.util.Iterator;
+-import java.util.List;
+-import java.util.Map;
+-import java.util.Random;
+-import java.util.regex.Matcher;
+-import java.util.regex.Pattern;
+-
+-public class BufferedObjective {
+-    private static final Method addEntryMethod;
+-    private static final int MAX_LINE_LENGTH;
+-    private static final Pattern PATTERN = Pattern.compile("(\u00A7[0-9a-fk-r])|(.)");
+-
+-    private final Scoreboard scoreboard;
+-    private final String baseName;
+-
+-    private Objective current;
+-    private List<Team> currentTeams = new ArrayList<>();
+-    private String title;
+-    private DisplaySlot displaySlot;
+-
+-    private int objPtr;
+-    private int teamPtr;
+-    private boolean requiresUpdate = false;
+-
+-    private final Map<Integer, String> contents = new HashMap<>();
+-
+-    static {
+-        // Check for long line support.
+-        // We require use of Spigot's `addEntry(String)` method on
+-        // Teams, as adding OfflinePlayers to a team is far too slow.
+-
+-        Method addEntryMethodLookup = null;
+-        try {
+-            addEntryMethodLookup = Team.class.getMethod("addEntry", String.class);
+-        } catch (NoSuchMethodException ignored) {
+-        }
+-
+-        addEntryMethod = addEntryMethodLookup;
+-
+-        if (addEntryMethod != null) {
+-            MAX_LINE_LENGTH = 48;
+-        } else {
+-            MAX_LINE_LENGTH = 16;
+-        }
+-    }
+-
+-    public BufferedObjective(Scoreboard scoreboard) {
+-        this.scoreboard = scoreboard;
+-        this.baseName = createBaseName();
+-
+-        current = scoreboard.registerNewObjective(getNextObjectiveName(), "dummy");
+-    }
+-
+-    private String createBaseName() {
+-        Random random = new Random();
+-        StringBuilder builder = new StringBuilder();
+-        while (builder.length() < 14) {
+-            builder.append(Integer.toHexString(random.nextInt()));
+-        }
+-        return builder.substring(0, 14);
+-    }
+-
+-    public void setTitle(String title) {
+-        if (this.title == null || !this.title.equals(title)) {
+-            this.title = title;
+-            requiresUpdate = true;
+-        }
+-    }
+-
+-    public void setDisplaySlot(DisplaySlot slot) {
+-        this.displaySlot = slot;
+-        current.setDisplaySlot(slot);
+-    }
+-
+-    public void setAllLines(List<String> lines) {
+-        if (lines.size() != contents.size()) {
+-            contents.clear();
+-        }
+-        for (int i = 0; i < lines.size(); i++) {
+-            setLine(lines.size() - i, lines.get(i));
+-        }
+-    }
+-
+-    public void setLine(int lineNumber, String content) {
+-        if (content.length() > MAX_LINE_LENGTH) {
+-            content = content.substring(0, MAX_LINE_LENGTH);
+-        }
+-        content = ChatColor.translateAlternateColorCodes('&', content);
+-
+-        if (contents.get(lineNumber) == null || !contents.get(lineNumber).equals(content)) {
+-            contents.put(lineNumber, content);
+-            requiresUpdate = true;
+-        }
+-    }
+-
+-    // Hides the objective from the display slot until flip() is called
+-    public void hide() {
+-        if (displaySlot != null) {
+-            scoreboard.clearSlot(displaySlot);
+-        }
+-    }
+-
+-    public void flip() {
+-        if (!requiresUpdate) {
+-            return;
+-        }
+-        requiresUpdate = false;
+-
+-        Objective buffer = scoreboard.registerNewObjective(getNextObjectiveName(), "dummy");
+-        buffer.setDisplayName(title);
+-
+-        List<Team> bufferTeams = new ArrayList<>();
+-
+-        for (Map.Entry<Integer, String> entry : contents.entrySet()) {
+-            if (entry.getValue().length() > 16) {
+-                Team team = scoreboard.registerNewTeam(getNextTeamName());
+-                bufferTeams.add(team);
+-
+-                String name, prefix = null, suffix = null;
+-
+-                String value = entry.getValue();
+-                if (value.length() > 16) {
+-                    String[] arrImAPirate = new String[3];
+-                    Matcher matcherrr = PATTERN.matcher(value);
+-                    StringBuilder builderrr = new StringBuilder();
+-                    int sCURvy = 0;
+-                    char currrentColorrr = 'r';
+-                    char currrentFormat = 'r';
+-                    while (sCURvy < 3 && matcherrr.find()) {
+-                        String tharSheBlows = matcherrr.group();
+-                        boolean hoist = false;
+-                        if (tharSheBlows.length() == 1) {
+-                            builderrr.append(tharSheBlows);
+-                            if (builderrr.length() == 16) {
+-                                hoist = true;
+-                            }
+-                        } else {
+-                            char c = tharSheBlows.charAt(1);
+-                            if (c >= 'k' && c <= 'r') { // format!
+-                                currrentFormat = c;
+-                                if (c == 'r') {
+-                                    currrentColorrr = 'r';
+-                                }
+-                            } else {
+-                                currrentColorrr = c;
+-                                currrentFormat = 'r';
+-                            }
+-                            if (builderrr.length() < 14) {
+-                                builderrr.append(tharSheBlows);
+-                            } else {
+-                                hoist = true;
+-                            }
+-                        }
+-                        if (hoist) {
+-                            arrImAPirate[sCURvy++] = builderrr.toString();
+-                            builderrr = new StringBuilder();
+-                            if (currrentColorrr != 'r') {
+-                                builderrr.append('\u00A7').append(currrentColorrr);
+-                            }
+-                            if (currrentFormat != 'r') {
+-                                builderrr.append('\u00A7').append(currrentFormat);
+-                            }
+-                        }
+-                    }
+-                    if (sCURvy < 3 && builderrr.length() > 0) {
+-                        arrImAPirate[sCURvy] = builderrr.toString();
+-                    }
+-                    if (arrImAPirate[2] == null) {
+-                        name = arrImAPirate[0];
+-                        suffix = arrImAPirate[1];
+-                    } else {
+-                        prefix = arrImAPirate[0];
+-                        name = arrImAPirate[1];
+-                        suffix = arrImAPirate[2];
+-                    }
+-                } else {
+-                    name = value;
+-                }
+-
+-                if (prefix != null) {
+-                    team.setPrefix(prefix);
+-                }
+-                if (suffix != null) {
+-                    team.setSuffix(suffix);
+-                }
+-
+-
+-                try {
+-                    addEntryMethod.invoke(team, name);
+-                } catch (ReflectiveOperationException ignored) {
+-                }
+-                buffer.getScore(name).setScore(entry.getKey());
+-            } else {
+-                buffer.getScore(entry.getValue()).setScore(entry.getKey());
+-            }
+-        }
+-
+-        if (displaySlot != null) {
+-            buffer.setDisplaySlot(displaySlot);
+-        }
+-
+-        // Unregister _ALL_ the old things
+-        current.unregister();
+-
+-        Iterator<Team> it = currentTeams.iterator();
+-        while (it.hasNext()) {
+-            it.next().unregister();
+-            it.remove();
+-        }
+-
+-        current = buffer;
+-        currentTeams = bufferTeams;
+-    }
+-
+-    private String getNextObjectiveName() {
+-        return baseName + "_" + ((objPtr++) % 2);
+-    }
+-
+-    private String getNextTeamName() {
+-        return baseName.substring(0, 10) + "_" + ((teamPtr++) % 999999);
+-    }
+-}
+diff --git a/src/main/java/com/massivecraft/factions/scoreboards/FScoreboard.java b/src/main/java/com/massivecraft/factions/scoreboards/FScoreboard.java
+deleted file mode 100644
+index e077cbac..00000000
+--- a/src/main/java/com/massivecraft/factions/scoreboards/FScoreboard.java
++++ /dev/null
+@@ -1,152 +0,0 @@
+-package com.massivecraft.factions.scoreboards;
+-
+-import com.massivecraft.factions.FPlayer;
+-import com.massivecraft.factions.FPlayers;
+-import com.massivecraft.factions.FactionsPlugin;
+-import org.bukkit.Bukkit;
+-import org.bukkit.entity.Player;
+-import org.bukkit.scheduler.BukkitRunnable;
+-import org.bukkit.scoreboard.DisplaySlot;
+-import org.bukkit.scoreboard.Scoreboard;
+-
+-import java.util.HashMap;
+-import java.util.Map;
+-
+-public class FScoreboard {
+-    private static final Map<FPlayer, FScoreboard> fscoreboards = new HashMap<>();
+-
+-    private final Scoreboard scoreboard;
+-    private final FPlayer fplayer;
+-    private final BufferedObjective bufferedObjective;
+-    private FSidebarProvider defaultProvider;
+-    private FSidebarProvider temporaryProvider;
+-    private boolean removed = false;
+-
+-    // Glowstone doesn't support scoreboards.
+-    // All references to this and related workarounds can be safely
+-    // removed when scoreboards are supported.
+-    public static boolean isSupportedByServer() {
+-        return Bukkit.getScoreboardManager() != null;
+-    }
+-
+-    public static void init(FPlayer fplayer) {
+-        FScoreboard fboard = new FScoreboard(fplayer);
+-        fscoreboards.put(fplayer, fboard);
+-
+-        if (fplayer.hasFaction()) {
+-            FTeamWrapper.applyUpdates(fplayer.getFaction());
+-        }
+-        FTeamWrapper.track(fboard);
+-    }
+-
+-    public static void remove(FPlayer fplayer, Player player) {
+-        FScoreboard fboard = fscoreboards.remove(fplayer);
+-
+-        if (fboard != null) {
+-            if (fboard.scoreboard == player.getScoreboard()) { // No equals method implemented, so may as well skip a nullcheck
+-                player.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
+-            }
+-            fboard.removed = true;
+-            FTeamWrapper.untrack(fboard);
+-        }
+-    }
+-
+-    public static FScoreboard get(FPlayer fplayer) {
+-        return fscoreboards.get(fplayer);
+-    }
+-
+-    public static FScoreboard get(Player player) {
+-        return fscoreboards.get(FPlayers.getInstance().getByPlayer(player));
+-    }
+-
+-    private FScoreboard(FPlayer fplayer) {
+-        this.fplayer = fplayer;
+-
+-        if (isSupportedByServer()) {
+-            this.scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+-            this.bufferedObjective = new BufferedObjective(scoreboard);
+-
+-            fplayer.getPlayer().setScoreboard(scoreboard);
+-        } else {
+-            this.scoreboard = null;
+-            this.bufferedObjective = null;
+-        }
+-    }
+-
+-    protected FPlayer getFPlayer() {
+-        return fplayer;
+-    }
+-
+-    protected Scoreboard getScoreboard() {
+-        return scoreboard;
+-    }
+-
+-    public void setSidebarVisibility(boolean visible) {
+-        if (!isSupportedByServer()) {
+-            return;
+-        }
+-
+-        bufferedObjective.setDisplaySlot(visible ? DisplaySlot.SIDEBAR : null);
+-    }
+-
+-    public void setDefaultSidebar(final FSidebarProvider provider) {
+-        if (!isSupportedByServer()) {
+-            return;
+-        }
+-
+-        defaultProvider = provider;
+-        if (temporaryProvider == null) {
+-            // We have no temporary provider; update the BufferedObjective!
+-            updateObjective();
+-        }
+-
+-        new BukkitRunnable() {
+-            @Override
+-            public void run() {
+-                if (removed || provider != defaultProvider) {
+-                    cancel();
+-                    return;
+-                }
+-
+-                if (temporaryProvider == null) {
+-                    updateObjective();
+-                }
+-            }
+-        }.runTaskTimer(FactionsPlugin.getInstance(), 20, 20);
+-    }
+-
+-    public void setTemporarySidebar(final FSidebarProvider provider) {
+-        if (!isSupportedByServer()) {
+-            return;
+-        }
+-
+-        temporaryProvider = provider;
+-        updateObjective();
+-
+-        new BukkitRunnable() {
+-            @Override
+-            public void run() {
+-                if (removed) {
+-                    return;
+-                }
+-
+-                if (temporaryProvider == provider) {
+-                    temporaryProvider = null;
+-                    updateObjective();
+-                }
+-            }
+-        }.runTaskLater(FactionsPlugin.getInstance(), FactionsPlugin.getInstance().conf().scoreboard().info().getExpiration() * 20L);
+-    }
+-
+-    private void updateObjective() {
+-        FSidebarProvider provider = temporaryProvider != null ? temporaryProvider : defaultProvider;
+-
+-        if (provider == null) {
+-            bufferedObjective.hide();
+-        } else {
+-            bufferedObjective.setTitle(provider.getTitle(fplayer));
+-            bufferedObjective.setAllLines(provider.getLines(fplayer));
+-            bufferedObjective.flip();
+-        }
+-    }
+-}
+diff --git a/src/main/java/com/massivecraft/factions/scoreboards/FSidebarProvider.java b/src/main/java/com/massivecraft/factions/scoreboards/FSidebarProvider.java
+deleted file mode 100644
+index 4ac68361..00000000
+--- a/src/main/java/com/massivecraft/factions/scoreboards/FSidebarProvider.java
++++ /dev/null
+@@ -1,41 +0,0 @@
+-package com.massivecraft.factions.scoreboards;
+-
+-import com.massivecraft.factions.FPlayer;
+-import com.massivecraft.factions.Faction;
+-import com.massivecraft.factions.FactionsPlugin;
+-import com.massivecraft.factions.tag.Tag;
+-import com.massivecraft.factions.util.TL;
+-
+-import java.util.List;
+-
+-public abstract class FSidebarProvider {
+-
+-    public abstract String getTitle(FPlayer fplayer);
+-
+-    public abstract List<String> getLines(FPlayer fplayer);
+-
+-    public String replaceTags(FPlayer fPlayer, String s) {
+-        s = Tag.parsePlaceholders(fPlayer.getPlayer(), s);
+-
+-        return qualityAssure(Tag.parsePlain(fPlayer, s));
+-    }
+-
+-    public String replaceTags(Faction faction, FPlayer fPlayer, String s) {
+-        // Run through Placeholder API first
+-        s = Tag.parsePlaceholders(fPlayer.getPlayer(), s);
+-
+-        return qualityAssure(Tag.parsePlain(faction, fPlayer, s));
+-    }
+-
+-    private String qualityAssure(String line) {
+-        if (line.contains("{notFrozen}") || line.contains("{notPermanent}")) {
+-            return "n/a"; // we don't support these error variables in scoreboards
+-        }
+-        if (line.contains("{ig}")) {
+-            // since you can't really fit a whole "Faction Home: world, x, y, z" on one line
+-            // we assume it's broken up into two lines, so returning our tl will suffice.
+-            return TL.COMMAND_SHOW_NOHOME.toString();
+-        }
+-        return FactionsPlugin.getInstance().txt().parse(line); // finally add color :)
+-    }
+-}
+diff --git a/src/main/java/com/massivecraft/factions/scoreboards/FTeamWrapper.java b/src/main/java/com/massivecraft/factions/scoreboards/FTeamWrapper.java
+deleted file mode 100644
+index a9a7b33f..00000000
+--- a/src/main/java/com/massivecraft/factions/scoreboards/FTeamWrapper.java
++++ /dev/null
+@@ -1,237 +0,0 @@
+-package com.massivecraft.factions.scoreboards;
+-
+-import com.massivecraft.factions.FPlayer;
+-import com.massivecraft.factions.FPlayers;
+-import com.massivecraft.factions.Faction;
+-import com.massivecraft.factions.Factions;
+-import com.massivecraft.factions.FactionsPlugin;
+-import com.massivecraft.factions.config.file.MainConfig;
+-import com.massivecraft.factions.tag.Tag;
+-import org.bukkit.ChatColor;
+-import org.bukkit.OfflinePlayer;
+-import org.bukkit.scheduler.BukkitRunnable;
+-import org.bukkit.scoreboard.Scoreboard;
+-import org.bukkit.scoreboard.Team;
+-
+-import java.util.ArrayList;
+-import java.util.HashMap;
+-import java.util.HashSet;
+-import java.util.List;
+-import java.util.Map;
+-import java.util.Set;
+-
+-public class FTeamWrapper {
+-    private static final Map<Faction, FTeamWrapper> wrappers = new HashMap<>();
+-    private static final List<FScoreboard> tracking = new ArrayList<>();
+-    private static int factionTeamPtr;
+-    private static final Set<Faction> updating = new HashSet<>();
+-
+-    private final Map<FScoreboard, Team> teams = new HashMap<>();
+-    private final String teamName;
+-    private final Faction faction;
+-    private final Set<OfflinePlayer> members = new HashSet<>();
+-
+-    public static void applyUpdatesLater(final Faction faction) {
+-        if (!FScoreboard.isSupportedByServer()) {
+-            return;
+-        }
+-
+-        if (faction.isWilderness()) {
+-            return;
+-        }
+-
+-        if (!FactionsPlugin.getInstance().conf().scoreboard().constant().isPrefixes() && !FactionsPlugin.getInstance().conf().scoreboard().constant().isSuffixes()) {
+-            return;
+-        }
+-
+-
+-        if (updating.add(faction)) {
+-            new BukkitRunnable() {
+-                @Override
+-                public void run() {
+-                    updating.remove(faction);
+-                    applyUpdates(faction);
+-                }
+-            }.runTask(FactionsPlugin.getInstance());
+-        }
+-    }
+-
+-    public static void applyUpdates(Faction faction) {
+-        if (!FScoreboard.isSupportedByServer()) {
+-            return;
+-        }
+-
+-        if (faction.isWilderness()) {
+-            return;
+-        }
+-
+-        if (!FactionsPlugin.getInstance().conf().scoreboard().constant().isPrefixes() && !FactionsPlugin.getInstance().conf().scoreboard().constant().isSuffixes()) {
+-            return;
+-        }
+-
+-        if (updating.contains(faction)) {
+-            // Faction will be updated soon.
+-            return;
+-        }
+-
+-        FTeamWrapper wrapper = wrappers.get(faction);
+-        Set<FPlayer> factionMembers = faction.getFPlayers();
+-
+-        if (wrapper != null && Factions.getInstance().getFactionById(faction.getId()) == null) {
+-            // Faction was disbanded
+-            wrapper.unregister();
+-            wrappers.remove(faction);
+-            return;
+-        }
+-
+-        if (wrapper == null) {
+-            wrapper = new FTeamWrapper(faction);
+-            wrappers.put(faction, wrapper);
+-        }
+-
+-        for (OfflinePlayer player : wrapper.getPlayers()) {
+-            if (!player.isOnline() || !factionMembers.contains(FPlayers.getInstance().getByOfflinePlayer(player))) {
+-                // Player is offline or no longer in faction
+-                wrapper.removePlayer(player);
+-            }
+-        }
+-
+-        for (FPlayer fmember : factionMembers) {
+-            if (!fmember.isOnline()) {
+-                continue;
+-            }
+-
+-            // Scoreboard might not have player; add him/her
+-            wrapper.addPlayer(fmember.getPlayer());
+-        }
+-
+-        wrapper.updatePrefixesAndSuffixes();
+-    }
+-
+-    public static void updatePrefixes(Faction faction) {
+-        if (!FScoreboard.isSupportedByServer()) {
+-            return;
+-        }
+-
+-        if (!wrappers.containsKey(faction)) {
+-            applyUpdates(faction);
+-        } else {
+-            wrappers.get(faction).updatePrefixesAndSuffixes();
+-        }
+-    }
+-
+-    protected static void track(FScoreboard fboard) {
+-        if (!FScoreboard.isSupportedByServer()) {
+-            return;
+-        }
+-        tracking.add(fboard);
+-        for (FTeamWrapper wrapper : wrappers.values()) {
+-            wrapper.add(fboard);
+-        }
+-    }
+-
+-    protected static void untrack(FScoreboard fboard) {
+-        if (!FScoreboard.isSupportedByServer()) {
+-            return;
+-        }
+-        tracking.remove(fboard);
+-        for (FTeamWrapper wrapper : wrappers.values()) {
+-            wrapper.remove(fboard);
+-        }
+-    }
+-
+-
+-    private FTeamWrapper(Faction faction) {
+-        this.teamName = "faction_" + (factionTeamPtr++);
+-        this.faction = faction;
+-
+-        for (FScoreboard fboard : tracking) {
+-            add(fboard);
+-        }
+-    }
+-
+-    private void add(FScoreboard fboard) {
+-        Scoreboard board = fboard.getScoreboard();
+-        Team team = board.registerNewTeam(teamName);
+-        teams.put(fboard, team);
+-
+-        for (OfflinePlayer player : getPlayers()) {
+-            team.addPlayer(player);
+-        }
+-
+-        updatePrefixAndSuffix(fboard);
+-    }
+-
+-    private void remove(FScoreboard fboard) {
+-        teams.remove(fboard).unregister();
+-    }
+-
+-    private void updatePrefixesAndSuffixes() {
+-        if (FactionsPlugin.getInstance().conf().scoreboard().constant().isPrefixes() || FactionsPlugin.getInstance().conf().scoreboard().constant().isSuffixes()) {
+-            for (FScoreboard fboard : teams.keySet()) {
+-                updatePrefixAndSuffix(fboard);
+-            }
+-        }
+-    }
+-
+-    private void updatePrefixAndSuffix(FScoreboard fboard) {
+-        MainConfig.Scoreboard.Constant conf = FactionsPlugin.getInstance().conf().scoreboard().constant();
+-        if (conf.isPrefixes()) {
+-            Team team = teams.get(fboard);
+-            String prefix = this.apply(conf.getPrefixTemplate(), fboard.getFPlayer(), conf.getPrefixLength());
+-
+-            if (!prefix.equals(team.getPrefix())) {
+-                team.setPrefix(prefix);
+-            }
+-        }
+-        if (conf.isSuffixes()) {
+-            Team team = teams.get(fboard);
+-            String suffix = this.apply(conf.getSuffixTemplate(), fboard.getFPlayer(), conf.getSuffixLength());
+-
+-            if (!suffix.equals(team.getSuffix())) {
+-                team.setSuffix(suffix);
+-            }
+-        }
+-    }
+-
+-    private String apply(String prefixOrSuffix, FPlayer fplayer, int maxLength) {
+-        prefixOrSuffix = Tag.parsePlaceholders(fplayer.getPlayer(), prefixOrSuffix);
+-        prefixOrSuffix = prefixOrSuffix.replace("{relationcolor}", faction.getRelationTo(fplayer).getColor().toString());
+-        int remaining = Math.min("{faction}".length() + maxLength - prefixOrSuffix.length(), faction.getTag().length());
+-        prefixOrSuffix = prefixOrSuffix.replace("{faction}", remaining > 0 ? faction.getTag().substring(0, remaining) : "");
+-        prefixOrSuffix = Tag.parsePlain(fplayer, prefixOrSuffix);
+-        prefixOrSuffix = ChatColor.translateAlternateColorCodes('&', prefixOrSuffix);
+-
+-        if (prefixOrSuffix.length() > maxLength) {
+-            prefixOrSuffix = prefixOrSuffix.substring(0, maxLength);
+-        }
+-        return prefixOrSuffix;
+-    }
+-
+-    private void addPlayer(OfflinePlayer player) {
+-        if (members.add(player)) {
+-            for (Team team : teams.values()) {
+-                team.addPlayer(player);
+-            }
+-        }
+-    }
+-
+-    private void removePlayer(OfflinePlayer player) {
+-        if (members.remove(player)) {
+-            for (Team team : teams.values()) {
+-                team.removePlayer(player);
+-            }
+-        }
+-    }
+-
+-    private Set<OfflinePlayer> getPlayers() {
+-        return new HashSet<>(this.members);
+-    }
+-
+-    private void unregister() {
+-        for (Team team : teams.values()) {
+-            team.unregister();
+-        }
+-        teams.clear();
+-    }
+-}
+diff --git a/src/main/java/com/massivecraft/factions/scoreboards/sidebar/FDefaultSidebar.java b/src/main/java/com/massivecraft/factions/scoreboards/sidebar/FDefaultSidebar.java
+deleted file mode 100644
+index 6a5f3cf9..00000000
+--- a/src/main/java/com/massivecraft/factions/scoreboards/sidebar/FDefaultSidebar.java
++++ /dev/null
+@@ -1,69 +0,0 @@
+-package com.massivecraft.factions.scoreboards.sidebar;
+-
+-import com.massivecraft.factions.Board;
+-import com.massivecraft.factions.FPlayer;
+-import com.massivecraft.factions.FactionsPlugin;
+-import com.massivecraft.factions.data.MemoryBoard;
+-import com.massivecraft.factions.scoreboards.FSidebarProvider;
+-import net.kyori.adventure.text.Component;
+-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+-
+-import java.util.ArrayList;
+-import java.util.List;
+-import java.util.ListIterator;
+-
+-public class FDefaultSidebar extends FSidebarProvider {
+-
+-    @Override
+-    public String getTitle(FPlayer fplayer) {
+-        if (FactionsPlugin.getInstance().conf().scoreboard().constant().isFactionlessEnabled() && !fplayer.hasFaction()) {
+-            return replaceTags(fplayer, FactionsPlugin.getInstance().conf().scoreboard().constant().getFactionlessTitle());
+-        }
+-        return replaceTags(fplayer, FactionsPlugin.getInstance().conf().scoreboard().constant().getTitle());
+-    }
+-
+-    @Override
+-    public List<String> getLines(FPlayer fplayer) {
+-        if (FactionsPlugin.getInstance().conf().scoreboard().constant().isFactionlessEnabled() && !fplayer.hasFaction()) {
+-            return getOutput(fplayer, FactionsPlugin.getInstance().conf().scoreboard().constant().getFactionlessContent());
+-        }
+-        return getOutput(fplayer, FactionsPlugin.getInstance().conf().scoreboard().constant().getContent());
+-    }
+-
+-    public List<String> getOutput(FPlayer fplayer, List<String> lines) {
+-        if (lines == null || lines.isEmpty()) {
+-            return new ArrayList<>();
+-        }
+-
+-        List<Component> mapMap = null;
+-        String mapC = "0123456789abcdef";
+-        lines = new ArrayList<>(lines);
+-
+-        ListIterator<String> it = lines.listIterator();
+-        while (it.hasNext()) {
+-            String next = it.next();
+-            if (next == null) {
+-                it.remove();
+-                continue;
+-            }
+-            if (next.contains("{map}")) {
+-                if (mapMap == null) {
+-                    mapMap = ((MemoryBoard) Board.getInstance()).getScoreboardMap(fplayer);
+-                }
+-                String rep = mapMap.isEmpty() ? "" : LegacyComponentSerializer.legacySection().serialize(mapMap.remove(0));
+-                if (!rep.isEmpty() && !mapC.isEmpty()) {
+-                    rep = "\u00A7" + mapC.charAt(0) + "\u00A7r" + rep;
+-                    mapC = mapC.substring(1);
+-                }
+-                next = next.replace("{map}", rep);
+-            }
+-            String replaced = replaceTags(fplayer, next);
+-            if (replaced == null) {
+-                it.remove();
+-            } else {
+-                it.set(replaced);
+-            }
+-        }
+-        return lines;
+-    }
+-}
+diff --git a/src/main/java/com/massivecraft/factions/scoreboards/sidebar/FInfoSidebar.java b/src/main/java/com/massivecraft/factions/scoreboards/sidebar/FInfoSidebar.java
+deleted file mode 100644
+index a4b633e0..00000000
+--- a/src/main/java/com/massivecraft/factions/scoreboards/sidebar/FInfoSidebar.java
++++ /dev/null
+@@ -1,44 +0,0 @@
+-package com.massivecraft.factions.scoreboards.sidebar;
+-
+-import com.massivecraft.factions.FPlayer;
+-import com.massivecraft.factions.Faction;
+-import com.massivecraft.factions.FactionsPlugin;
+-import com.massivecraft.factions.scoreboards.FSidebarProvider;
+-
+-import java.util.ArrayList;
+-import java.util.List;
+-import java.util.ListIterator;
+-
+-public class FInfoSidebar extends FSidebarProvider {
+-    private final Faction faction;
+-
+-    public FInfoSidebar(Faction faction) {
+-        this.faction = faction;
+-    }
+-
+-    @Override
+-    public String getTitle(FPlayer fplayer) {
+-        return replaceTags(this.faction, fplayer, FactionsPlugin.getInstance().conf().scoreboard().info().getTitle());
+-    }
+-
+-    @Override
+-    public List<String> getLines(FPlayer fplayer) {
+-        List<String> lines = new ArrayList<>(FactionsPlugin.getInstance().conf().scoreboard().info().getContent());
+-
+-        ListIterator<String> it = lines.listIterator();
+-        while (it.hasNext()) {
+-            String next = it.next();
+-            if (next == null) {
+-                it.remove();
+-                continue;
+-            }
+-            String replaced = replaceTags(faction, fplayer, next);
+-            if (replaced == null) {
+-                it.remove();
+-            } else {
+-                it.set(replaced);
+-            }
+-        }
+-        return lines;
+-    }
+-}
+-- 
+2.43.0
+
