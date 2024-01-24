@@ -1,11 +1,11 @@
-From e0ea34e54d2ceabfbf65a9af5a6b13f7a397d3a4 Mon Sep 17 00:00:00 2001
+From 53c58397f99014ad4b67041300f4644ac5946456 Mon Sep 17 00:00:00 2001
 From: hsgamer <huynhqtienvtag@gmail.com>
 Date: Wed, 24 Jan 2024 14:11:58 +0700
 Subject: [PATCH] use built-in Paper Adventure
 
 ---
  modules/Legacy/pom.xml                        | 150 +-------
- modules/Main/pom.xml                          | 332 ++----------------
+ modules/Main/pom.xml                          | 348 +++---------------
  .../massivecraft/factions/FactionsPlugin.java |  15 +-
  .../com/massivecraft/factions/cmd/CmdMap.java |   4 +-
  .../massivecraft/factions/cmd/CmdPerm.java    |   4 +-
@@ -13,7 +13,7 @@ Subject: [PATCH] use built-in Paper Adventure
  .../factions/cmd/CmdTicketInfo.java           |   2 +-
  .../listeners/FactionsPlayerListener.java     |   4 +-
  .../massivecraft/factions/tag/FancyTag.java   |   2 +-
- 9 files changed, 55 insertions(+), 464 deletions(-)
+ 9 files changed, 70 insertions(+), 465 deletions(-)
 
 diff --git a/modules/Legacy/pom.xml b/modules/Legacy/pom.xml
 index 9f404729..d1e12175 100644
@@ -198,9 +198,15 @@ index 9f404729..d1e12175 100644
              </exclusions>
          </dependency>
 diff --git a/modules/Main/pom.xml b/modules/Main/pom.xml
-index 49595c79..498bda46 100644
+index 49595c79..cce4148f 100644
 --- a/modules/Main/pom.xml
 +++ b/modules/Main/pom.xml
+@@ -1,4 +1,4 @@
+-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
++<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+     <modelVersion>4.0.0</modelVersion>
+ 
 @@ -55,10 +55,6 @@
                              <pattern>mkremins.fanciful</pattern>
                              <shadedPattern>moss.factions.shade.mkremins.fanciful</shadedPattern>
@@ -569,20 +575,40 @@ index 49595c79..498bda46 100644
          </dependency>
          <dependency>
              <groupId>com.darkblade12</groupId>
-@@ -455,6 +231,12 @@
+@@ -449,12 +225,32 @@
+             <version>1.8.0-fuuid</version>
+             <optional>true</optional>
+         </dependency>
++        <dependency>
++            <groupId>com.mojang</groupId>
++            <artifactId>brigadier</artifactId>
++            <version>1.0.18</version>
++            <scope>provided</scope>
++        </dependency>
+         <dependency>
+             <groupId>me.lucko</groupId>
+             <artifactId>commodore</artifactId>
              <version>2.2</version>
              <scope>compile</scope>
              <optional>true</optional>
 +            <exclusions>
 +                <exclusion>
-+                    <groupId>*</groupId>
-+                    <artifactId>*</artifactId>
++                    <groupId>com.google.guava</groupId>
++                    <artifactId>guava</artifactId>
++                </exclusion>
++                <exclusion>
++                    <groupId>com.google.inject</groupId>
++                    <artifactId>guice</artifactId>
++                </exclusion>
++                <exclusion>
++                    <groupId>org.checkerframework</groupId>
++                    <artifactId>checker-qual</artifactId>
 +                </exclusion>
 +            </exclusions>
          </dependency>
          <dependency>
              <groupId>com.griefcraft.lwc</groupId>
-@@ -482,12 +264,6 @@
+@@ -482,12 +278,6 @@
              <version>2.0.30-SNAPSHOT</version>
              <type>jar</type>
              <scope>provided</scope>
@@ -595,7 +621,7 @@ index 49595c79..498bda46 100644
          </dependency>
          <dependency>
              <groupId>com.denizenscript</groupId>
-@@ -503,46 +279,8 @@
+@@ -503,46 +293,8 @@
              <optional>true</optional>
              <exclusions>
                  <exclusion>
@@ -644,7 +670,7 @@ index 49595c79..498bda46 100644
                  </exclusion>
              </exclusions>
          </dependency>
-@@ -566,10 +304,16 @@
+@@ -566,10 +318,16 @@
              <type>jar</type>
              <scope>provided</scope>
          </dependency>
