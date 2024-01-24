@@ -5,7 +5,7 @@ Subject: [PATCH] delete chat listener
 
 
 diff --git a/modules/Main/pom.xml b/modules/Main/pom.xml
-index eed2a2f94b5aa3a32c93f6bfd1a28237965cccc5..116e4bb2360c0aaec9d2c92e361ae16d520c234a 100644
+index 59947e2433e9602d4eb240956c035a5a8428a47d..823c4b449ea6916e30636c17e96fd56977443e63 100644
 --- a/modules/Main/pom.xml
 +++ b/modules/Main/pom.xml
 @@ -189,12 +189,6 @@

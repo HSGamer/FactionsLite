@@ -5,7 +5,7 @@ Subject: [PATCH] use built-in Paper Adventure
 
 
 diff --git a/modules/Legacy/pom.xml b/modules/Legacy/pom.xml
-index 9f4047292eda01bc2b58d9cf67543337d12c4be7..d1e12175fd3f8fd697c5b43f22bc7a3190a21eb4 100644
+index 23779caab77558d01b4f56bd854ac7684499aa35..bf444c38f3ce0282a5943f56ed47fea52a549c23 100644
 --- a/modules/Legacy/pom.xml
 +++ b/modules/Legacy/pom.xml
 @@ -34,28 +34,6 @@
@@ -187,7 +187,7 @@ index 9f4047292eda01bc2b58d9cf67543337d12c4be7..d1e12175fd3f8fd697c5b43f22bc7a31
              </exclusions>
          </dependency>
 diff --git a/modules/Main/pom.xml b/modules/Main/pom.xml
-index 49595c795ceae96f8d8cc171feb143179482f70b..eed2a2f94b5aa3a32c93f6bfd1a28237965cccc5 100644
+index 263fc0e37567d05bb539b958668d5d9a30688aae..59947e2433e9602d4eb240956c035a5a8428a47d 100644
 --- a/modules/Main/pom.xml
 +++ b/modules/Main/pom.xml
 @@ -1,4 +1,4 @@
@@ -735,6 +735,58 @@ index 7943586c502beaf822951f280ea905bc22589d6d..c54dab8fedfeced34ca91b05b3228bbf
          }
          player.sendMessage(ChatColor.GREEN + "Get it at " + ChatColor.DARK_AQUA + "https://www.spigotmc.org/resources/factionsuuid.1035/");
      }
+diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdColeader.java b/src/main/java/com/massivecraft/factions/cmd/CmdColeader.java
+index 8032513106b1e037f1716bddd1fa57065d2b5621..9e399a3fb8a8616fa5f8ccf2caeb97c24ac48fe5 100644
+--- a/src/main/java/com/massivecraft/factions/cmd/CmdColeader.java
++++ b/src/main/java/com/massivecraft/factions/cmd/CmdColeader.java
+@@ -42,7 +42,7 @@ public class CmdColeader extends FCommand {
+                         .clickEvent(ClickEvent.runCommand("/" + FactionsPlugin.getInstance().conf().getCommandBase().get(0) + " coleader " + s))
+                 );
+             }
+-            FactionsPlugin.getInstance().getAdventure().player(context.player).sendMessage(component);
++            context.player.sendMessage(component);
+             return;
+         }
+ 
+diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdDeinvite.java b/src/main/java/com/massivecraft/factions/cmd/CmdDeinvite.java
+index f753f7f8dde3eafd14ebd3b33e4031af75325525..96697d705f13d088a3b04ce55916cfc539dfa89c 100644
+--- a/src/main/java/com/massivecraft/factions/cmd/CmdDeinvite.java
++++ b/src/main/java/com/massivecraft/factions/cmd/CmdDeinvite.java
+@@ -41,7 +41,7 @@ public class CmdDeinvite extends FCommand {
+                         .clickEvent(ClickEvent.runCommand("/" + FactionsPlugin.getInstance().conf().getCommandBase().get(0) + " deinvite " + name))
+                 );
+             }
+-            FactionsPlugin.getInstance().getAdventure().player(context.player).sendMessage(component);
++            context.player.sendMessage(component);
+             return;
+         }
+ 
+diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdInvite.java b/src/main/java/com/massivecraft/factions/cmd/CmdInvite.java
+index a936cc9fa84b33a839c1e2102a6d98e2b4a7595a..bd65646cba33e1c25335ba41551249796712e962 100644
+--- a/src/main/java/com/massivecraft/factions/cmd/CmdInvite.java
++++ b/src/main/java/com/massivecraft/factions/cmd/CmdInvite.java
+@@ -57,7 +57,7 @@ public class CmdInvite extends FCommand {
+                     .append(legacy.deserialize(context.faction.describeTo(target)));
+             component = component.hoverEvent(legacy.deserialize(TL.COMMAND_INVITE_CLICKTOJOIN.toString()).asHoverEvent())
+                     .clickEvent(ClickEvent.runCommand("/" + FactionsPlugin.getInstance().conf().getCommandBase().get(0) + " join " + ChatColor.stripColor(context.faction.getTag())));
+-            FactionsPlugin.getInstance().getAdventure().player(target.getPlayer()).sendMessage(component);
++            target.getPlayer().sendMessage(component);
+         }
+ 
+         //you.msg("%s<i> invited you to %s",context.fPlayer.describeTo(you, true), context.faction.describeTo(you));
+diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdKick.java b/src/main/java/com/massivecraft/factions/cmd/CmdKick.java
+index e7819441ac8115eab83cc74bd291b988bfa5b4f0..6a9e6c6e3ea5d4e88ccfa748342849c839b7c564 100644
+--- a/src/main/java/com/massivecraft/factions/cmd/CmdKick.java
++++ b/src/main/java/com/massivecraft/factions/cmd/CmdKick.java
+@@ -63,7 +63,7 @@ public class CmdKick extends FCommand {
+                 }
+             }
+ 
+-            FactionsPlugin.getInstance().getAdventure().player(context.player).sendMessage(component);
++            context.player.sendMessage(component);
+             return;
+         }
+ 
 diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdMap.java b/src/main/java/com/massivecraft/factions/cmd/CmdMap.java
 index 90fdacd61cdd9fbc08dc2f2176da4546999183fe..f2d33b51d7f538b7c3a2afd9fcaa4403e233f1ec 100644
 --- a/src/main/java/com/massivecraft/factions/cmd/CmdMap.java
@@ -757,6 +809,19 @@ index 90fdacd61cdd9fbc08dc2f2176da4546999183fe..f2d33b51d7f538b7c3a2afd9fcaa4403
 +            context.player.sendMessage(component);
          }
      }
+ 
+diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdMod.java b/src/main/java/com/massivecraft/factions/cmd/CmdMod.java
+index 35c3ba77f4a805da6a9056dd0f5b7595903ac6fc..56054f38210a509791f6262be68748f298658242 100644
+--- a/src/main/java/com/massivecraft/factions/cmd/CmdMod.java
++++ b/src/main/java/com/massivecraft/factions/cmd/CmdMod.java
+@@ -43,7 +43,7 @@ public class CmdMod extends FCommand {
+                 );
+             }
+ 
+-            FactionsPlugin.getInstance().getAdventure().player(context.player).sendMessage(component);
++            context.player.sendMessage(component);
+             return;
+         }
  
 diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdPerm.java b/src/main/java/com/massivecraft/factions/cmd/CmdPerm.java
 index 0a6023888907d62786c6e1e307b9eacc37ebb439..b8ffb1e78a02031500435e66a0d56447d214d183 100644
@@ -818,6 +883,19 @@ index 2fa6c4c8f6976ffec0a356a65df431b1fa8be464..8f2c212f79232eff2fbe74186f9fdd50
              }
          }
      }
+diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdShowInvites.java b/src/main/java/com/massivecraft/factions/cmd/CmdShowInvites.java
+index cde185506c64457b86fd1806b30b6407af5bd74a..cb39e7a625a60cf05d8ad095590b5a1488446e11 100644
+--- a/src/main/java/com/massivecraft/factions/cmd/CmdShowInvites.java
++++ b/src/main/java/com/massivecraft/factions/cmd/CmdShowInvites.java
+@@ -34,7 +34,7 @@ public class CmdShowInvites extends FCommand {
+             );
+         }
+ 
+-        FactionsPlugin.getInstance().getAdventure().player(context.player).sendMessage(component);
++        context.player.sendMessage(component);
+     }
+ 
+     @Override
 diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdTicketInfo.java b/src/main/java/com/massivecraft/factions/cmd/CmdTicketInfo.java
 index a7c1eabc465900195a65b8c1e2ad11b7ab4ad518..6e0a2548a0570b85f44cba09ea2507ad1ee62c89 100644
 --- a/src/main/java/com/massivecraft/factions/cmd/CmdTicketInfo.java
