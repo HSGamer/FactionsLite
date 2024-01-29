@@ -1,0 +1,944 @@
+From 3671996906f1574db5edcd20875fd96e979e04bb Mon Sep 17 00:00:00 2001
+From: hsgamer <huynhqtienvtag@gmail.com>
+Date: Mon, 29 Jan 2024 16:51:10 +0700
+Subject: [PATCH] delete chat listener
+
+---
+ modules/Main/pom.xml                          |   6 -
+ .../com/massivecraft/factions/FPlayer.java    |  13 --
+ .../massivecraft/factions/FactionsAPI.java    |   8 -
+ .../massivecraft/factions/FactionsPlugin.java |  49 -----
+ .../massivecraft/factions/cmd/CmdChat.java    |  98 ---------
+ .../massivecraft/factions/cmd/CmdChatSpy.java |  38 ----
+ .../massivecraft/factions/cmd/CmdHelp.java    |   3 -
+ .../factions/cmd/CmdToggleAllianceChat.java   |  38 ----
+ .../massivecraft/factions/cmd/FCmdRoot.java   |   6 -
+ .../factions/config/file/MainConfig.java      |  87 --------
+ .../factions/data/MemoryFPlayer.java          |  32 ---
+ .../listeners/FactionsChatListener.java       | 192 ------------------
+ .../listeners/FactionsPlayerListener.java     |  14 --
+ .../factions/struct/ChatMode.java             |  47 -----
+ 14 files changed, 631 deletions(-)
+ delete mode 100644 src/main/java/com/massivecraft/factions/cmd/CmdChat.java
+ delete mode 100644 src/main/java/com/massivecraft/factions/cmd/CmdChatSpy.java
+ delete mode 100644 src/main/java/com/massivecraft/factions/cmd/CmdToggleAllianceChat.java
+ delete mode 100644 src/main/java/com/massivecraft/factions/listeners/FactionsChatListener.java
+ delete mode 100644 src/main/java/com/massivecraft/factions/struct/ChatMode.java
+
+diff --git a/modules/Main/pom.xml b/modules/Main/pom.xml
+index eed2a2f9..116e4bb2 100644
+--- a/modules/Main/pom.xml
++++ b/modules/Main/pom.xml
+@@ -189,12 +189,6 @@
+             <version>2.16.0</version>
+             <scope>provided</scope>
+         </dependency>
+-        <dependency>
+-            <groupId>net.ess3</groupId>
+-            <artifactId>EssentialsXChat</artifactId>
+-            <version>2.0.1</version>
+-            <scope>provided</scope>
+-        </dependency>
+         <dependency>
+             <groupId>org.dynmap</groupId>
+             <artifactId>dynmap</artifactId>
+diff --git a/src/main/java/com/massivecraft/factions/FPlayer.java b/src/main/java/com/massivecraft/factions/FPlayer.java
+index 56b71e00..a7ee2e8d 100644
+--- a/src/main/java/com/massivecraft/factions/FPlayer.java
++++ b/src/main/java/com/massivecraft/factions/FPlayer.java
+@@ -4,7 +4,6 @@ import com.massivecraft.factions.iface.EconomyParticipator;
+ import com.massivecraft.factions.perms.Relation;
+ import com.massivecraft.factions.perms.Role;
+ import com.massivecraft.factions.perms.Selectable;
+-import com.massivecraft.factions.struct.ChatMode;
+ import com.massivecraft.factions.util.WarmUpUtil;
+ import com.massivecraft.factions.lib.mkremins.fanciful.FancyMessage;
+ import org.bukkit.Location;
+@@ -88,18 +87,6 @@ public interface FPlayer extends EconomyParticipator, Selectable {
+ 
+     void setIsAdminBypassing(boolean val);
+ 
+-    void setChatMode(ChatMode chatMode);
+-
+-    ChatMode getChatMode();
+-
+-    void setIgnoreAllianceChat(boolean ignore);
+-
+-    boolean isIgnoreAllianceChat();
+-
+-    void setSpyingChat(boolean chatSpying);
+-
+-    boolean isSpyingChat();
+-
+     boolean showScoreboard();
+ 
+     void setShowScoreboard(boolean show);
+diff --git a/src/main/java/com/massivecraft/factions/FactionsAPI.java b/src/main/java/com/massivecraft/factions/FactionsAPI.java
+index 1e301e4b..3ac68fef 100644
+--- a/src/main/java/com/massivecraft/factions/FactionsAPI.java
++++ b/src/main/java/com/massivecraft/factions/FactionsAPI.java
+@@ -17,14 +17,6 @@ public interface FactionsAPI {
+         return 5;
+     }
+ 
+-    boolean isAnotherPluginHandlingChat();
+-
+-    void setHandlingChat(Plugin plugin, boolean handling);
+-
+-    boolean shouldLetFactionsHandleThisChat(AsyncPlayerChatEvent event);
+-
+-    boolean isPlayerFactionChatting(Player player);
+-
+     String getPlayerFactionTag(Player player);
+ 
+     String getPlayerFactionTagRelation(Player speaker, Player listener);
+diff --git a/src/main/java/com/massivecraft/factions/FactionsPlugin.java b/src/main/java/com/massivecraft/factions/FactionsPlugin.java
+index c54dab8f..be822268 100644
+--- a/src/main/java/com/massivecraft/factions/FactionsPlugin.java
++++ b/src/main/java/com/massivecraft/factions/FactionsPlugin.java
+@@ -27,7 +27,6 @@ import com.massivecraft.factions.integration.dynmap.EngineDynmap;
+ import com.massivecraft.factions.integration.permcontext.ContextManager;
+ import com.massivecraft.factions.landraidcontrol.LandRaidControl;
+ import com.massivecraft.factions.listeners.FactionsBlockListener;
+-import com.massivecraft.factions.listeners.FactionsChatListener;
+ import com.massivecraft.factions.listeners.FactionsEntityListener;
+ import com.massivecraft.factions.listeners.FactionsExploitListener;
+ import com.massivecraft.factions.listeners.FactionsPlayerListener;
+@@ -40,7 +39,6 @@ import com.massivecraft.factions.perms.PermSelector;
+ import com.massivecraft.factions.perms.PermSelectorRegistry;
+ import com.massivecraft.factions.perms.PermSelectorTypeAdapter;
+ import com.massivecraft.factions.perms.PermissibleActionRegistry;
+-import com.massivecraft.factions.struct.ChatMode;
+ import com.massivecraft.factions.util.AutoLeaveTask;
+ import com.massivecraft.factions.util.EnumTypeAdapter;
+ import com.massivecraft.factions.util.FlightUtil;
+@@ -61,7 +59,6 @@ import com.massivecraft.factions.util.particle.PacketParticleProvider;
+ import com.massivecraft.factions.util.particle.ParticleProvider;
+ import com.mojang.authlib.GameProfile;
+ import io.papermc.lib.PaperLib;
+-import net.kyori.adventure.audience.Audience;
+ import net.kyori.adventure.text.Component;
+ import net.kyori.adventure.text.format.TextColor;
+ import net.kyori.adventure.text.minimessage.MiniMessage;
+@@ -72,7 +69,6 @@ import org.bukkit.OfflinePlayer;
+ import org.bukkit.configuration.file.YamlConfiguration;
+ import org.bukkit.entity.Player;
+ import org.bukkit.event.HandlerList;
+-import org.bukkit.event.player.AsyncPlayerChatEvent;
+ import org.bukkit.event.player.PlayerTeleportEvent;
+ import org.bukkit.plugin.Plugin;
+ import org.bukkit.plugin.RegisteredListener;
+@@ -98,7 +94,6 @@ import java.nio.file.Files;
+ import java.nio.file.Path;
+ import java.util.ArrayList;
+ import java.util.Arrays;
+-import java.util.Collections;
+ import java.util.HashMap;
+ import java.util.HashSet;
+ import java.util.LinkedHashMap;
+@@ -108,7 +103,6 @@ import java.util.Set;
+ import java.util.UUID;
+ import java.util.concurrent.Callable;
+ import java.util.concurrent.CompletableFuture;
+-import java.util.concurrent.ConcurrentHashMap;
+ import java.util.function.Supplier;
+ import java.util.logging.Handler;
+ import java.util.logging.Level;
+@@ -173,7 +167,6 @@ public class FactionsPlugin extends JavaPlugin implements FactionsAPI {
+ 
+     private ClipPlaceholderAPIManager clipPlaceholderAPIManager;
+     private boolean mvdwPlaceholderAPIManager = false;
+-    private final Set<String> pluginsHandlingChat = Collections.newSetFromMap(new ConcurrentHashMap<>());
+ 
+     private SeeChunkUtil seeChunkUtil;
+     private ParticleProvider<?> particleProvider;
+@@ -507,7 +500,6 @@ public class FactionsPlugin extends JavaPlugin implements FactionsAPI {
+ 
+         // Register Event Handlers
+         getServer().getPluginManager().registerEvents(new FactionsPlayerListener(this), this);
+-        getServer().getPluginManager().registerEvents(new FactionsChatListener(this), this);
+         getServer().getPluginManager().registerEvents(new FactionsEntityListener(this), this);
+         getServer().getPluginManager().registerEvents(new FactionsExploitListener(this), this);
+         getServer().getPluginManager().registerEvents(new FactionsBlockListener(this), this);
+@@ -1081,47 +1073,6 @@ public class FactionsPlugin extends JavaPlugin implements FactionsAPI {
+         return 4;
+     }
+ 
+-    // If another plugin is handling insertion of chat tags, this should be used to notify Factions
+-    @Override
+-    public void setHandlingChat(Plugin plugin, boolean handling) {
+-        if (plugin == null) {
+-            throw new IllegalArgumentException("Null plugin!");
+-        }
+-        if (plugin == this) {
+-            throw new IllegalArgumentException("Nice try, but this plugin isn't going to register itself!");
+-        }
+-        if (handling) {
+-            this.pluginsHandlingChat.add(plugin.getName());
+-        } else {
+-            this.pluginsHandlingChat.remove(plugin.getName());
+-        }
+-    }
+-
+-    @Override
+-    public boolean isAnotherPluginHandlingChat() {
+-        return this.conf().factions().chat().isTagHandledByAnotherPlugin() || !this.pluginsHandlingChat.isEmpty();
+-    }
+-
+-    // Simply put, should this chat event be left for Factions to handle? For now, that means players with Faction Chat
+-    // enabled or use of the Factions f command without a slash; combination of isPlayerFactionChatting() and isFactionsCommand()
+-
+-    @Override
+-    public boolean shouldLetFactionsHandleThisChat(AsyncPlayerChatEvent event) {
+-        return event != null && isPlayerFactionChatting(event.getPlayer());
+-    }
+-
+-    // Does player have Faction Chat enabled? If so, chat plugins should preferably not do channels,
+-    // local chat, or anything else which targets individual recipients, so Faction Chat can be done
+-    @Override
+-    public boolean isPlayerFactionChatting(Player player) {
+-        if (player == null) {
+-            return false;
+-        }
+-        FPlayer me = FPlayers.getInstance().getByPlayer(player);
+-
+-        return me != null && me.getChatMode().isAtLeast(ChatMode.ALLIANCE);
+-    }
+-
+     // Is this chat message actually a Factions command, and thus should be left alone by other plugins?
+ 
+     // Get a player's faction tag (faction name), mainly for usage by chat plugins for local/channel chat
+diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdChat.java b/src/main/java/com/massivecraft/factions/cmd/CmdChat.java
+deleted file mode 100644
+index dacf8b40..00000000
+--- a/src/main/java/com/massivecraft/factions/cmd/CmdChat.java
++++ /dev/null
+@@ -1,98 +0,0 @@
+-package com.massivecraft.factions.cmd;
+-
+-import com.massivecraft.factions.FactionsPlugin;
+-import com.massivecraft.factions.perms.Role;
+-import com.massivecraft.factions.struct.ChatMode;
+-import com.massivecraft.factions.struct.Permission;
+-import com.massivecraft.factions.util.TL;
+-import com.mojang.brigadier.builder.ArgumentBuilder;
+-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+-
+-public class CmdChat extends FCommand {
+-
+-    public CmdChat() {
+-        super();
+-        this.aliases.add("c");
+-        this.aliases.add("chat");
+-
+-        this.optionalArgs.put("mode", "next");
+-
+-        this.requirements = new CommandRequirements.Builder(Permission.CHAT)
+-                .memberOnly()
+-                .noDisableOnLock()
+-                .brigadier(ChatBrigadier.class)
+-                .build();
+-    }
+-
+-    @Override
+-    public void perform(CommandContext context) {
+-        if (!FactionsPlugin.getInstance().conf().factions().chat().isFactionOnlyChat()) {
+-            context.msg(TL.COMMAND_CHAT_DISABLED.toString());
+-            return;
+-        }
+-
+-        String modeString = context.argAsString(0);
+-        ChatMode modeTarget = context.fPlayer.getChatMode().getNext();
+-
+-        // If player is cycling through chat modes
+-        // and he is not atleast a moderator get next one
+-        if (modeString == null && modeTarget == ChatMode.MOD) {
+-            if (!context.fPlayer.getRole().isAtLeast(Role.MODERATOR)) {
+-                modeTarget = modeTarget.getNext();
+-            }
+-        }
+-
+-        if (modeString != null) {
+-            modeString = modeString.toLowerCase();
+-            if (modeString.startsWith("m")) {
+-                modeTarget = ChatMode.MOD;
+-                if (!context.fPlayer.getRole().isAtLeast(Role.MODERATOR)) {
+-                    context.msg(TL.COMMAND_CHAT_INSUFFICIENTRANK);
+-                    return;
+-                }
+-            } else if (modeString.startsWith("p")) {
+-                modeTarget = ChatMode.PUBLIC;
+-            } else if (modeString.startsWith("a")) {
+-                modeTarget = ChatMode.ALLIANCE;
+-            } else if (modeString.startsWith("f")) {
+-                modeTarget = ChatMode.FACTION;
+-            } else if (modeString.startsWith("t")) {
+-                modeTarget = ChatMode.TRUCE;
+-            } else {
+-                context.msg(TL.COMMAND_CHAT_INVALIDMODE);
+-                return;
+-            }
+-        }
+-
+-        context.fPlayer.setChatMode(modeTarget);
+-
+-        if (context.fPlayer.getChatMode() == ChatMode.MOD) {
+-            context.msg(TL.COMMAND_CHAT_MODE_MOD);
+-        } else if (context.fPlayer.getChatMode() == ChatMode.PUBLIC) {
+-            context.msg(TL.COMMAND_CHAT_MODE_PUBLIC);
+-        } else if (context.fPlayer.getChatMode() == ChatMode.ALLIANCE) {
+-            context.msg(TL.COMMAND_CHAT_MODE_ALLIANCE);
+-        } else if (context.fPlayer.getChatMode() == ChatMode.TRUCE) {
+-            context.msg(TL.COMMAND_CHAT_MODE_TRUCE);
+-        } else {
+-            context.msg(TL.COMMAND_CHAT_MODE_FACTION);
+-        }
+-    }
+-
+-    @Override
+-    public TL getUsageTranslation() {
+-        return TL.COMMAND_CHAT_DESCRIPTION;
+-    }
+-
+-    protected class ChatBrigadier implements BrigadierProvider {
+-        @Override
+-        public ArgumentBuilder<Object, ?> get(ArgumentBuilder<Object, ?> parent) {
+-            return parent.then(LiteralArgumentBuilder.literal("public"))
+-                    .then(LiteralArgumentBuilder.literal("mod"))
+-                    .then(LiteralArgumentBuilder.literal("alliance"))
+-                    .then(LiteralArgumentBuilder.literal("faction"))
+-                    .then(LiteralArgumentBuilder.literal("truce"));
+-        }
+-    }
+-
+-}
+diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdChatSpy.java b/src/main/java/com/massivecraft/factions/cmd/CmdChatSpy.java
+deleted file mode 100644
+index 0b256fc9..00000000
+--- a/src/main/java/com/massivecraft/factions/cmd/CmdChatSpy.java
++++ /dev/null
+@@ -1,38 +0,0 @@
+-package com.massivecraft.factions.cmd;
+-
+-import com.massivecraft.factions.FactionsPlugin;
+-import com.massivecraft.factions.struct.Permission;
+-import com.massivecraft.factions.util.TL;
+-
+-public class CmdChatSpy extends FCommand {
+-
+-    public CmdChatSpy() {
+-        super();
+-        this.aliases.add("chatspy");
+-
+-        this.optionalArgs.put("on/off", "flip");
+-
+-        this.requirements = new CommandRequirements.Builder(Permission.CHATSPY)
+-                .playerOnly()
+-                .noDisableOnLock()
+-                .build();
+-    }
+-
+-    @Override
+-    public void perform(CommandContext context) {
+-        context.fPlayer.setSpyingChat(context.argAsBool(0, !context.fPlayer.isSpyingChat()));
+-
+-        if (context.fPlayer.isSpyingChat()) {
+-            context.fPlayer.msg(TL.COMMAND_CHATSPY_ENABLE);
+-            FactionsPlugin.getInstance().log(context.fPlayer.getName() + TL.COMMAND_CHATSPY_ENABLELOG.toString());
+-        } else {
+-            context.fPlayer.msg(TL.COMMAND_CHATSPY_DISABLE);
+-            FactionsPlugin.getInstance().log(context.fPlayer.getName() + TL.COMMAND_CHATSPY_DISABLELOG.toString());
+-        }
+-    }
+-
+-    @Override
+-    public TL getUsageTranslation() {
+-        return TL.COMMAND_CHATSPY_DESCRIPTION;
+-    }
+-}
+\ No newline at end of file
+diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdHelp.java b/src/main/java/com/massivecraft/factions/cmd/CmdHelp.java
+index d57c8ca9..4cdf9d33 100644
+--- a/src/main/java/com/massivecraft/factions/cmd/CmdHelp.java
++++ b/src/main/java/com/massivecraft/factions/cmd/CmdHelp.java
+@@ -71,8 +71,6 @@ public class CmdHelp extends FCommand {
+         pageLines.add(FCmdRoot.getInstance().cmdPower.getUsageTemplate(context, true));
+         pageLines.add(FCmdRoot.getInstance().cmdJoin.getUsageTemplate(context, true));
+         pageLines.add(FCmdRoot.getInstance().cmdLeave.getUsageTemplate(context, true));
+-        pageLines.add(FCmdRoot.getInstance().cmdChat.getUsageTemplate(context, true));
+-        pageLines.add(FCmdRoot.getInstance().cmdToggleAllianceChat.getUsageTemplate(context, true));
+         pageLines.add(FCmdRoot.getInstance().cmdHome.getUsageTemplate(context, true));
+         pageLines.add(plugin.txt().parse(TL.COMMAND_HELP_NEXTCREATE.toString()));
+         helpPages.add(pageLines);
+@@ -178,7 +176,6 @@ public class CmdHelp extends FCommand {
+ 
+         pageLines = new ArrayList<>();
+         pageLines.add(plugin.txt().parse(TL.COMMAND_HELP_MOAR_2.toString()));
+-        pageLines.add(FCmdRoot.getInstance().cmdChatSpy.getUsageTemplate(context, true));
+         pageLines.add(FCmdRoot.getInstance().cmdPermanent.getUsageTemplate(context, true));
+         pageLines.add(FCmdRoot.getInstance().cmdPermanentPower.getUsageTemplate(context, true));
+         pageLines.add(FCmdRoot.getInstance().cmdPowerBoost.getUsageTemplate(context, true));
+diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdToggleAllianceChat.java b/src/main/java/com/massivecraft/factions/cmd/CmdToggleAllianceChat.java
+deleted file mode 100644
+index e53328ae..00000000
+--- a/src/main/java/com/massivecraft/factions/cmd/CmdToggleAllianceChat.java
++++ /dev/null
+@@ -1,38 +0,0 @@
+-package com.massivecraft.factions.cmd;
+-
+-import com.massivecraft.factions.FactionsPlugin;
+-import com.massivecraft.factions.struct.Permission;
+-import com.massivecraft.factions.util.TL;
+-
+-public class CmdToggleAllianceChat extends FCommand {
+-
+-    public CmdToggleAllianceChat() {
+-        super();
+-        this.aliases.add("tac");
+-        this.aliases.add("togglealliancechat");
+-        this.aliases.add("ac");
+-
+-        this.requirements = new CommandRequirements.Builder(Permission.TOGGLE_ALLIANCE_CHAT)
+-                .memberOnly()
+-                .noDisableOnLock()
+-                .build();
+-    }
+-
+-    @Override
+-    public TL getUsageTranslation() {
+-        return TL.COMMAND_TOGGLEALLIANCECHAT_DESCRIPTION;
+-    }
+-
+-    @Override
+-    public void perform(CommandContext context) {
+-        if (!FactionsPlugin.getInstance().conf().factions().chat().isFactionOnlyChat()) {
+-            context.msg(TL.COMMAND_CHAT_DISABLED.toString());
+-            return;
+-        }
+-
+-        boolean ignoring = context.fPlayer.isIgnoreAllianceChat();
+-
+-        context.msg(ignoring ? TL.COMMAND_TOGGLEALLIANCECHAT_UNIGNORE : TL.COMMAND_TOGGLEALLIANCECHAT_IGNORE);
+-        context.fPlayer.setIgnoreAllianceChat(!ignoring);
+-    }
+-}
+diff --git a/src/main/java/com/massivecraft/factions/cmd/FCmdRoot.java b/src/main/java/com/massivecraft/factions/cmd/FCmdRoot.java
+index e69242fb..f3ea992c 100644
+--- a/src/main/java/com/massivecraft/factions/cmd/FCmdRoot.java
++++ b/src/main/java/com/massivecraft/factions/cmd/FCmdRoot.java
+@@ -50,8 +50,6 @@ public class FCmdRoot extends FCommand implements CommandExecutor {
+     public final CmdAutoUnclaim cmdAutoUnclaim = new CmdAutoUnclaim();
+     public final CmdBoom cmdBoom = new CmdBoom();
+     public final CmdBypass cmdBypass = new CmdBypass();
+-    public final CmdChat cmdChat = new CmdChat();
+-    public final CmdChatSpy cmdChatSpy = new CmdChatSpy();
+     public final CmdClaim cmdClaim = new CmdClaim();
+     public final CmdCoords cmdCoords = new CmdCoords();
+     public final CmdCreate cmdCreate = new CmdCreate();
+@@ -94,7 +92,6 @@ public class FCmdRoot extends FCommand implements CommandExecutor {
+     public final CmdStuck cmdStuck = new CmdStuck();
+     public final CmdTag cmdTag = new CmdTag();
+     public final CmdTitle cmdTitle = new CmdTitle();
+-    public final CmdToggleAllianceChat cmdToggleAllianceChat = new CmdToggleAllianceChat();
+     public final CmdUnclaim cmdUnclaim = new CmdUnclaim();
+     public final CmdUnclaimall cmdUnclaimall = new CmdUnclaimall();
+     public final CmdVersion cmdVersion = new CmdVersion();
+@@ -149,9 +146,6 @@ public class FCmdRoot extends FCommand implements CommandExecutor {
+         this.addSubCommand(this.cmdAutoClaim);
+         this.addSubCommand(this.cmdBoom);
+         this.addSubCommand(this.cmdBypass);
+-        this.addSubCommand(this.cmdChat);
+-        this.addSubCommand(this.cmdToggleAllianceChat);
+-        this.addSubCommand(this.cmdChatSpy);
+         this.addSubCommand(this.cmdClaim);
+         this.addSubCommand(this.cmdCoords);
+         this.addSubCommand(this.cmdCreate);
+diff --git a/src/main/java/com/massivecraft/factions/config/file/MainConfig.java b/src/main/java/com/massivecraft/factions/config/file/MainConfig.java
+index ce7d6cec..fe3e7e57 100644
+--- a/src/main/java/com/massivecraft/factions/config/file/MainConfig.java
++++ b/src/main/java/com/massivecraft/factions/config/file/MainConfig.java
+@@ -1,6 +1,5 @@
+ package com.massivecraft.factions.config.file;
+ 
+-import com.massivecraft.factions.FactionsPlugin;
+ import com.massivecraft.factions.config.annotation.Comment;
+ import com.massivecraft.factions.config.annotation.WipeOnReload;
+ import com.massivecraft.factions.perms.Relation;
+@@ -913,92 +912,20 @@ public class MainConfig {
+         }
+ 
+         public class Chat {
+-            @Comment("Allow for players to chat only within their faction, with allies, etc.\n" +
+-                    "Set to false to only allow public chats through this plugin.")
+-            private boolean factionOnlyChat = true;
+             // Configuration on the Faction tag in chat messages.
+-            @Comment("If true, disables adding of faction tag so another plugin can manage this")
+-            private boolean tagHandledByAnotherPlugin = false;
+             private boolean tagRelationColored = true;
+-            private String tagReplaceString = "[FACTION]";
+-            private String tagInsertAfterString = "";
+-            private String tagInsertBeforeString = "";
+-            private int tagInsertIndex = 0;
+-            private boolean tagPadBefore = false;
+-            private boolean tagPadAfter = true;
+             private String tagFormat = "%s\u00A7f";
+-            private boolean alwaysShowChatTag = true;
+-            private String factionChatFormat = "%s:\u00A7f %s";
+-            private String allianceChatFormat = "\u00A7d%s:\u00A7f %s";
+-            private String truceChatFormat = "\u00A75%s:\u00A7f %s";
+-            private String modChatFormat = "\u00A7c%s:\u00A7f %s";
+             private boolean broadcastDescriptionChanges = false;
+             private boolean broadcastTagChanges = false;
+-            @Comment("Add items here (comma-separated) for commands to listen to that will auto-return the user to public chat")
+-            private List<String> triggerPublicChatOnCommand = new ArrayList<>();
+-            @WipeOnReload
+-            private transient List<String> triggerPublicChatLowerCased;
+-
+-            public boolean isFactionOnlyChat() {
+-                return factionOnlyChat;
+-            }
+-
+-            public boolean isTagHandledByAnotherPlugin() {
+-                return tagHandledByAnotherPlugin;
+-            }
+ 
+             public boolean isTagRelationColored() {
+                 return tagRelationColored;
+             }
+ 
+-            public String getTagReplaceString() {
+-                return tagReplaceString;
+-            }
+-
+-            public String getTagInsertAfterString() {
+-                return tagInsertAfterString;
+-            }
+-
+-            public String getTagInsertBeforeString() {
+-                return tagInsertBeforeString;
+-            }
+-
+-            public int getTagInsertIndex() {
+-                return tagInsertIndex;
+-            }
+-
+-            public boolean isTagPadBefore() {
+-                return tagPadBefore;
+-            }
+-
+-            public boolean isTagPadAfter() {
+-                return tagPadAfter;
+-            }
+-
+             public String getTagFormat() {
+                 return tagFormat;
+             }
+ 
+-            public boolean isAlwaysShowChatTag() {
+-                return alwaysShowChatTag;
+-            }
+-
+-            public String getFactionChatFormat() {
+-                return factionChatFormat;
+-            }
+-
+-            public String getAllianceChatFormat() {
+-                return allianceChatFormat;
+-            }
+-
+-            public String getTruceChatFormat() {
+-                return truceChatFormat;
+-            }
+-
+-            public String getModChatFormat() {
+-                return modChatFormat;
+-            }
+-
+             public boolean isBroadcastDescriptionChanges() {
+                 return broadcastDescriptionChanges;
+             }
+@@ -1006,20 +933,6 @@ public class MainConfig {
+             public boolean isBroadcastTagChanges() {
+                 return broadcastTagChanges;
+             }
+-
+-            public List<String> getTriggerPublicChatOnCommand() {
+-                if (triggerPublicChatLowerCased == null) {
+-                    triggerPublicChatLowerCased = new ArrayList<>();
+-                    if (triggerPublicChatOnCommand != null) {
+-                        triggerPublicChatOnCommand.forEach(c -> triggerPublicChatLowerCased.add(c.toLowerCase()));
+-                    }
+-                }
+-                return triggerPublicChatLowerCased;
+-            }
+-
+-            public boolean isTriggerPublicChat(String command) {
+-                return getTriggerPublicChatOnCommand().contains(command.toLowerCase());
+-            }
+         }
+ 
+         public class Homes {
+diff --git a/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java b/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
+index 7575d611..1de7ae4c 100644
+--- a/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
++++ b/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
+@@ -22,7 +22,6 @@ import com.massivecraft.factions.landraidcontrol.PowerControl;
+ import com.massivecraft.factions.perms.PermissibleActions;
+ import com.massivecraft.factions.perms.Relation;
+ import com.massivecraft.factions.perms.Role;
+-import com.massivecraft.factions.struct.ChatMode;
+ import com.massivecraft.factions.struct.Permission;
+ import com.massivecraft.factions.tag.Tag;
+ import com.massivecraft.factions.util.RelationUtil;
+@@ -68,8 +67,6 @@ public abstract class MemoryFPlayer implements FPlayer {
+     protected double powerBoost;
+     protected long lastPowerUpdateTime;
+     protected long lastLoginTime;
+-    protected ChatMode chatMode;
+-    protected boolean ignoreAllianceChat = false;
+     protected String id;
+     protected String name;
+     protected boolean monitorJoins;
+@@ -248,33 +245,6 @@ public abstract class MemoryFPlayer implements FPlayer {
+         this.isAdminBypassing = val;
+     }
+ 
+-    public void setChatMode(ChatMode chatMode) {
+-        this.chatMode = chatMode;
+-    }
+-
+-    public ChatMode getChatMode() {
+-        if (this.chatMode == null || this.factionId.equals("0") || !FactionsPlugin.getInstance().conf().factions().chat().isFactionOnlyChat()) {
+-            this.chatMode = ChatMode.PUBLIC;
+-        }
+-        return chatMode;
+-    }
+-
+-    public void setIgnoreAllianceChat(boolean ignore) {
+-        this.ignoreAllianceChat = ignore;
+-    }
+-
+-    public boolean isIgnoreAllianceChat() {
+-        return ignoreAllianceChat;
+-    }
+-
+-    public void setSpyingChat(boolean chatSpying) {
+-        this.spyingChat = chatSpying;
+-    }
+-
+-    public boolean isSpyingChat() {
+-        return spyingChat;
+-    }
+-
+     // FIELD: account
+     public String getAccountId() {
+         return this.getId();
+@@ -328,7 +298,6 @@ public abstract class MemoryFPlayer implements FPlayer {
+         this.powerBoost = other.powerBoost;
+         this.role = other.role;
+         this.title = other.title;
+-        this.chatMode = other.chatMode;
+         this.spyingChat = other.spyingChat;
+         this.lastStoodAt = other.lastStoodAt;
+         this.isAdminBypassing = other.isAdminBypassing;
+@@ -348,7 +317,6 @@ public abstract class MemoryFPlayer implements FPlayer {
+         }
+ 
+         this.factionId = "0"; // The default neutral faction
+-        this.chatMode = ChatMode.PUBLIC;
+         this.role = Role.NORMAL;
+         this.title = "";
+         this.autoClaimFor = null;
+diff --git a/src/main/java/com/massivecraft/factions/listeners/FactionsChatListener.java b/src/main/java/com/massivecraft/factions/listeners/FactionsChatListener.java
+deleted file mode 100644
+index 6e32a324..00000000
+--- a/src/main/java/com/massivecraft/factions/listeners/FactionsChatListener.java
++++ /dev/null
+@@ -1,192 +0,0 @@
+-package com.massivecraft.factions.listeners;
+-
+-import com.massivecraft.factions.FPlayer;
+-import com.massivecraft.factions.FPlayers;
+-import com.massivecraft.factions.Faction;
+-import com.massivecraft.factions.FactionsPlugin;
+-import com.massivecraft.factions.config.file.MainConfig;
+-import com.massivecraft.factions.integration.Essentials;
+-import com.massivecraft.factions.integration.IntegrationManager;
+-import com.massivecraft.factions.perms.Relation;
+-import com.massivecraft.factions.perms.Role;
+-import com.massivecraft.factions.struct.ChatMode;
+-import org.bukkit.ChatColor;
+-import org.bukkit.entity.Player;
+-import org.bukkit.event.EventHandler;
+-import org.bukkit.event.EventPriority;
+-import org.bukkit.event.Listener;
+-import org.bukkit.event.player.AsyncPlayerChatEvent;
+-
+-import java.util.UnknownFormatConversionException;
+-import java.util.logging.Level;
+-
+-public class FactionsChatListener implements Listener {
+-
+-    public final FactionsPlugin plugin;
+-
+-    public FactionsChatListener(FactionsPlugin plugin) {
+-        this.plugin = plugin;
+-    }
+-
+-    // this is for handling slashless command usage and faction/alliance chat, set at lowest priority so Factions gets to them first
+-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+-    public void onPlayerEarlyChat(AsyncPlayerChatEvent event) {
+-        if (!plugin.worldUtil().isEnabled(event.getPlayer().getWorld())) {
+-            return;
+-        }
+-
+-        Player talkingPlayer = event.getPlayer();
+-        String msg = event.getMessage();
+-        FPlayer me = FPlayers.getInstance().getByPlayer(talkingPlayer);
+-        ChatMode chat = me.getChatMode();
+-        MainConfig.Factions.Chat chatConf = FactionsPlugin.getInstance().conf().factions().chat();
+-        //Is it a MOD chat
+-        if (chat == ChatMode.MOD) {
+-            Faction myFaction = me.getFaction();
+-
+-            String message = String.format(chatConf.getModChatFormat(), ChatColor.stripColor(me.getNameAndTag()), msg);
+-
+-            //Send to all mods
+-            for (FPlayer fplayer : FPlayers.getInstance().getOnlinePlayers()) {
+-                if (myFaction == fplayer.getFaction() && fplayer.getRole().isAtLeast(Role.MODERATOR)) {
+-                    fplayer.sendMessage(message);
+-                } else if (fplayer.isSpyingChat() && me != fplayer) {
+-                    fplayer.sendMessage("[MCspy]: " + message);
+-                }
+-            }
+-
+-            FactionsPlugin.getInstance().log(Level.INFO, ChatColor.stripColor("ModChat " + myFaction.getTag() + ": " + message));
+-
+-            event.setCancelled(true);
+-        } else if (chat == ChatMode.FACTION) {
+-            Faction myFaction = me.getFaction();
+-
+-            String message = String.format(chatConf.getFactionChatFormat(), me.describeTo(myFaction), msg);
+-            myFaction.sendMessage(message);
+-
+-            FactionsPlugin.getInstance().log(Level.INFO, ChatColor.stripColor("FactionChat " + myFaction.getTag() + ": " + message));
+-
+-            //Send to any players who are spying chat
+-            for (FPlayer fplayer : FPlayers.getInstance().getOnlinePlayers()) {
+-                if (fplayer.isSpyingChat() && fplayer.getFaction() != myFaction && me != fplayer) {
+-                    fplayer.sendMessage("[FCspy] " + myFaction.getTag() + ": " + message);
+-                }
+-            }
+-
+-            event.setCancelled(true);
+-        } else if (chat == ChatMode.ALLIANCE) {
+-            Faction myFaction = me.getFaction();
+-
+-            String message = String.format(chatConf.getAllianceChatFormat(), ChatColor.stripColor(me.getNameAndTag()), msg);
+-
+-            //Send message to our own faction
+-            myFaction.sendMessage(message);
+-
+-            //Send to all our allies
+-            for (FPlayer fplayer : FPlayers.getInstance().getOnlinePlayers()) {
+-                if (myFaction.getRelationTo(fplayer) == Relation.ALLY && !fplayer.isIgnoreAllianceChat()) {
+-                    fplayer.sendMessage(message);
+-                } else if (fplayer.isSpyingChat() && me != fplayer) {
+-                    fplayer.sendMessage("[ACspy]: " + message);
+-                }
+-            }
+-
+-            FactionsPlugin.getInstance().log(Level.INFO, ChatColor.stripColor("AllianceChat: " + message));
+-
+-            event.setCancelled(true);
+-        } else if (chat == ChatMode.TRUCE) {
+-            Faction myFaction = me.getFaction();
+-
+-            String message = String.format(chatConf.getTruceChatFormat(), ChatColor.stripColor(me.getNameAndTag()), msg);
+-
+-            //Send message to our own faction
+-            myFaction.sendMessage(message);
+-
+-            //Send to all our truces
+-            for (FPlayer fplayer : FPlayers.getInstance().getOnlinePlayers()) {
+-                if (myFaction.getRelationTo(fplayer) == Relation.TRUCE) {
+-                    fplayer.sendMessage(message);
+-                } else if (fplayer.isSpyingChat() && fplayer != me) {
+-                    fplayer.sendMessage("[TCspy]: " + message);
+-                }
+-            }
+-
+-            FactionsPlugin.getInstance().log(Level.INFO, ChatColor.stripColor("TruceChat: " + message));
+-            event.setCancelled(true);
+-        }
+-    }
+-
+-    // this is for handling insertion of the player's faction tag, set at highest priority to give other plugins a chance to modify chat first
+-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+-    public void onPlayerChat(AsyncPlayerChatEvent event) {
+-        if (!plugin.worldUtil().isEnabled(event.getPlayer().getWorld())) {
+-            return;
+-        }
+-
+-        // Are we to insert the Faction tag into the format?
+-        // If we are not to insert it - we are done.
+-        if (FactionsPlugin.getInstance().isAnotherPluginHandlingChat()) {
+-            return;
+-        }
+-
+-        Player talkingPlayer = event.getPlayer();
+-        String msg = event.getMessage();
+-        String eventFormat = event.getFormat();
+-        FPlayer me = FPlayers.getInstance().getByPlayer(talkingPlayer);
+-        MainConfig.Factions.Chat chatConf = FactionsPlugin.getInstance().conf().factions().chat();
+-        int InsertIndex = chatConf.getTagInsertIndex();
+-
+-        boolean padBefore = chatConf.isTagPadBefore();
+-        boolean padAfter = chatConf.isTagPadAfter();
+-
+-        if (!chatConf.getTagReplaceString().isEmpty() && eventFormat.contains(chatConf.getTagReplaceString())) {
+-            // we're using the "replace" method of inserting the faction tags
+-            if (eventFormat.contains("[FACTION_TITLE]")) {
+-                eventFormat = eventFormat.replace("[FACTION_TITLE]", me.getTitle());
+-            }
+-            InsertIndex = eventFormat.indexOf(chatConf.getTagReplaceString());
+-            eventFormat = eventFormat.replace(chatConf.getTagReplaceString(), "");
+-            padBefore = false;
+-            padAfter = false;
+-        } else if (!chatConf.getTagInsertAfterString().isEmpty() && eventFormat.contains(chatConf.getTagInsertAfterString())) {
+-            // we're using the "insert after string" method
+-            InsertIndex = eventFormat.indexOf(chatConf.getTagInsertAfterString()) + chatConf.getTagInsertAfterString().length();
+-        } else if (!chatConf.getTagInsertBeforeString().isEmpty() && eventFormat.contains(chatConf.getTagInsertBeforeString())) {
+-            // we're using the "insert before string" method
+-            InsertIndex = eventFormat.indexOf(chatConf.getTagInsertBeforeString());
+-        } else if (!chatConf.isAlwaysShowChatTag()) {
+-            return;
+-        }
+-
+-        String formatStart = eventFormat.substring(0, InsertIndex) + ((padBefore && !me.getChatTag().isEmpty()) ? " " : "");
+-        String formatEnd = ((padAfter && !me.getChatTag().isEmpty()) ? " " : "") + eventFormat.substring(InsertIndex);
+-
+-        String nonColoredMsgFormat = formatStart + me.getChatTag().trim() + formatEnd;
+-
+-        // Relation Colored?
+-        if (chatConf.isTagRelationColored()) {
+-            for (Player listeningPlayer : event.getRecipients()) {
+-                if (FactionsPlugin.getInstance().getIntegrationManager().isEnabled(IntegrationManager.Integration.ESS) && Essentials.isIgnored(listeningPlayer, talkingPlayer)) {
+-                    continue;
+-                }
+-                FPlayer you = FPlayers.getInstance().getByPlayer(listeningPlayer);
+-                String yourFormat = formatStart + me.getChatTag(you).trim() + formatEnd;
+-                try {
+-                    listeningPlayer.sendMessage(String.format(yourFormat, talkingPlayer.getDisplayName(), msg));
+-                } catch (UnknownFormatConversionException ex) {
+-
+-                    FactionsPlugin.getInstance().log(Level.SEVERE, "Critical error in chat message formatting!");
+-                    FactionsPlugin.getInstance().log(Level.SEVERE, "NOTE: This can be fixed right now by setting chat tagInsertIndex to 0.");
+-                    return;
+-                }
+-            }
+-
+-            // Messages are sent to players individually
+-            // This still leaves a chance for other plugins to pick it up
+-            event.getRecipients().clear();
+-        }
+-        // Message with no relation color.
+-        event.setFormat(nonColoredMsgFormat);
+-    }
+-
+-}
+diff --git a/src/main/java/com/massivecraft/factions/listeners/FactionsPlayerListener.java b/src/main/java/com/massivecraft/factions/listeners/FactionsPlayerListener.java
+index 21fe7f9c..68ccc053 100644
+--- a/src/main/java/com/massivecraft/factions/listeners/FactionsPlayerListener.java
++++ b/src/main/java/com/massivecraft/factions/listeners/FactionsPlayerListener.java
+@@ -13,7 +13,6 @@ import com.massivecraft.factions.integration.Graves;
+ import com.massivecraft.factions.perms.PermissibleActions;
+ import com.massivecraft.factions.perms.Relation;
+ import com.massivecraft.factions.perms.Role;
+-import com.massivecraft.factions.struct.ChatMode;
+ import com.massivecraft.factions.struct.Permission;
+ import com.massivecraft.factions.util.TL;
+ import com.massivecraft.factions.util.TextUtil;
+@@ -131,11 +130,6 @@ public class FactionsPlayerListener extends AbstractListener {
+         me.login(); // set kills / deaths
+         me.setOfflinePlayer(player);
+ 
+-        if (me.isSpyingChat() && !player.hasPermission(Permission.CHATSPY.node)) {
+-            me.setSpyingChat(false);
+-            FactionsPlugin.getInstance().log(Level.INFO, "Found %s spying chat without permission on login. Disabled their chat spying.", player.getName());
+-        }
+-
+         if (me.isAdminBypassing() && !player.hasPermission(Permission.BYPASS.node)) {
+             me.setIsAdminBypassing(false);
+             FactionsPlugin.getInstance().log(Level.INFO, "Found %s on admin Bypass without permission on login. Disabled it for them.", player.getName());
+@@ -771,14 +765,6 @@ public class FactionsPlayerListener extends AbstractListener {
+             return;
+         }
+ 
+-        String cmd = event.getMessage().split(" ")[0];
+-
+-        if (FactionsPlugin.getInstance().conf().factions().chat().isTriggerPublicChat(cmd.startsWith("/") ? cmd.substring(1) : cmd)) {
+-            FPlayer p = FPlayers.getInstance().getByPlayer(event.getPlayer());
+-            p.setChatMode(ChatMode.PUBLIC);
+-            p.msg(TL.COMMAND_CHAT_MODE_PUBLIC);
+-        }
+-
+         if (FactionsPlayerListener.preventCommand(event.getMessage(), event.getPlayer())) {
+             if (plugin.logPlayerCommands()) {
+                 plugin.getLogger().info("[PLAYER_COMMAND] " + event.getPlayer().getName() + ": " + event.getMessage());
+diff --git a/src/main/java/com/massivecraft/factions/struct/ChatMode.java b/src/main/java/com/massivecraft/factions/struct/ChatMode.java
+deleted file mode 100644
+index 0d31ca8b..00000000
+--- a/src/main/java/com/massivecraft/factions/struct/ChatMode.java
++++ /dev/null
+@@ -1,47 +0,0 @@
+-package com.massivecraft.factions.struct;
+-
+-import com.massivecraft.factions.util.TL;
+-
+-public enum ChatMode {
+-    MOD(4, TL.CHAT_MOD),
+-    FACTION(3, TL.CHAT_FACTION),
+-    ALLIANCE(2, TL.CHAT_ALLIANCE),
+-    TRUCE(1, TL.CHAT_TRUCE),
+-    PUBLIC(0, TL.CHAT_PUBLIC);
+-
+-    public final int value;
+-    public final TL nicename;
+-
+-    ChatMode(final int value, final TL nicename) {
+-        this.value = value;
+-        this.nicename = nicename;
+-    }
+-
+-    public boolean isAtLeast(ChatMode role) {
+-        return this.value >= role.value;
+-    }
+-
+-    public boolean isAtMost(ChatMode role) {
+-        return this.value <= role.value;
+-    }
+-
+-    @Override
+-    public String toString() {
+-        return this.nicename.toString();
+-    }
+-
+-    public ChatMode getNext() {
+-        switch (this) {
+-            case PUBLIC:
+-                return TRUCE;
+-            case TRUCE:
+-                return ALLIANCE;
+-            case ALLIANCE:
+-                return FACTION;
+-            case FACTION:
+-                return MOD;
+-            default:
+-                return PUBLIC;
+-        }
+-    }
+-}
+-- 
+2.43.0
+
