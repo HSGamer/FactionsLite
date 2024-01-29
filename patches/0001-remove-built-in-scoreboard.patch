@@ -1,4 +1,4 @@
-From 0982954fee0b111918b36d7ebf6f834b5767dab5 Mon Sep 17 00:00:00 2001
+From 6477fcafe40bf5248717211a18c06b5a327460e9 Mon Sep 17 00:00:00 2001
 From: hsgamer <huynhqtienvtag@gmail.com>
 Date: Wed, 24 Jan 2024 13:09:24 +0700
 Subject: [PATCH] remove built-in scoreboard
@@ -21,7 +21,8 @@ Subject: [PATCH] remove built-in scoreboard
  .../factions/scoreboards/FTeamWrapper.java    | 237 ------------------
  .../scoreboards/sidebar/FDefaultSidebar.java  |  69 -----
  .../scoreboards/sidebar/FInfoSidebar.java     |  44 ----
- 17 files changed, 1031 deletions(-)
+ src/main/resources/plugin.yml                 |   3 -
+ 18 files changed, 1034 deletions(-)
  delete mode 100644 src/main/java/com/massivecraft/factions/cmd/CmdSB.java
  delete mode 100644 src/main/java/com/massivecraft/factions/scoreboards/BufferedObjective.java
  delete mode 100644 src/main/java/com/massivecraft/factions/scoreboards/FScoreboard.java
@@ -1307,6 +1308,27 @@ index a4b633e0..00000000
 -        return lines;
 -    }
 -}
+diff --git a/src/main/resources/plugin.yml b/src/main/resources/plugin.yml
+index c077a3d1..094d9fac 100644
+--- a/src/main/resources/plugin.yml
++++ b/src/main/resources/plugin.yml
+@@ -101,7 +101,6 @@ permissions:
+       factions.version: true
+       factions.unclaim: true
+       factions.unclaimall: true
+-      factions.scoreboard: true
+       factions.showinvites: true
+       factions.seechunk: true
+       factions.monitorlogins: true
+@@ -265,8 +264,6 @@ permissions:
+     description: unclaim the land where you are standing
+   factions.unclaimall:
+     description: unclaim all of your factions land
+-  factions.scoreboard:
+-    description: ability to toggle scoreboards
+   factions.showinvites:
+     description: show pending invites to your faction
+   factions.seechunk:
 -- 
 2.43.0
 

@@ -1,4 +1,4 @@
-From f9d26eab67d206009657003a6735a90f6603583f Mon Sep 17 00:00:00 2001
+From a0cf4e7383c351803dc82c6cf18e16148a74fd93 Mon Sep 17 00:00:00 2001
 From: hsgamer <huynhqtienvtag@gmail.com>
 Date: Mon, 29 Jan 2024 16:51:10 +0700
 Subject: [PATCH] delete chat listener
@@ -18,7 +18,8 @@ Subject: [PATCH] delete chat listener
  .../listeners/FactionsChatListener.java       | 192 ------------------
  .../listeners/FactionsPlayerListener.java     |  14 --
  .../factions/struct/ChatMode.java             |  47 -----
- 14 files changed, 631 deletions(-)
+ src/main/resources/plugin.yml                 |  11 +-
+ 15 files changed, 1 insertion(+), 641 deletions(-)
  delete mode 100644 src/main/java/com/massivecraft/factions/cmd/CmdChat.java
  delete mode 100644 src/main/java/com/massivecraft/factions/cmd/CmdChatSpy.java
  delete mode 100644 src/main/java/com/massivecraft/factions/cmd/CmdToggleAllianceChat.java
@@ -939,6 +940,63 @@ index 0d31ca8b..00000000
 -        }
 -    }
 -}
+diff --git a/src/main/resources/plugin.yml b/src/main/resources/plugin.yml
+index 094d9fac..7f56f6e2 100644
+--- a/src/main/resources/plugin.yml
++++ b/src/main/resources/plugin.yml
+@@ -43,7 +43,7 @@ permissions:
+       factions.admin.any: true
+       factions.mod.any: true
+   factions.kit.halfmod:
+-    description: Zones, bypassing, kicking, and chatspy
++    description: Zones, bypassing, kicking
+     children:
+       factions.kit.fullplayer: true
+       factions.managesafezone: true
+@@ -51,7 +51,6 @@ permissions:
+       factions.bypass: true
+       factions.kick.any: true
+       factions.ownershipbypass: true
+-      factions.chatspy: true
+       factions.show.bypassexempt: true
+   factions.kit.fullplayer:
+     default: true
+@@ -65,7 +64,6 @@ permissions:
+     children:
+       factions.admin: true
+       factions.autoclaim: true
+-      factions.chat: true
+       factions.claim: true
+       factions.claim.line: true
+       factions.claim.radius: true
+@@ -105,7 +103,6 @@ permissions:
+       factions.seechunk: true
+       factions.monitorlogins: true
+       factions.top: true
+-      factions.togglealliancechat: true
+       factions.vault: true
+       factions.mapheight: true
+       factions.ban: true
+@@ -123,10 +120,6 @@ permissions:
+     description: auto-claim land as you walk around
+   factions.bypass:
+     description: enable admin bypass mode
+-  factions.chat:
+-    description: change chat mode
+-  factions.chatspy:
+-    description: enable admin chat spy mode
+   factions.claim:
+     description: claim land where you are standing
+   factions.claim.radius:
+@@ -284,8 +277,6 @@ permissions:
+     description: claim in a line
+   factions.top:
+     description: sort factions
+-  factions.togglealliancechat:
+-    description: toggle alliance chat on and off
+   factions.dontlosepoweroffline:
+     description: Don't lose power for being offline.
+   factions.ahome:
 -- 
 2.43.0
 
