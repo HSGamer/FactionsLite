@@ -1,4 +1,4 @@
-From 3671996906f1574db5edcd20875fd96e979e04bb Mon Sep 17 00:00:00 2001
+From f9d26eab67d206009657003a6735a90f6603583f Mon Sep 17 00:00:00 2001
 From: hsgamer <huynhqtienvtag@gmail.com>
 Date: Mon, 29 Jan 2024 16:51:10 +0700
 Subject: [PATCH] delete chat listener
@@ -43,7 +43,7 @@ index eed2a2f9..116e4bb2 100644
              <groupId>org.dynmap</groupId>
              <artifactId>dynmap</artifactId>
 diff --git a/src/main/java/com/massivecraft/factions/FPlayer.java b/src/main/java/com/massivecraft/factions/FPlayer.java
-index 56b71e00..a7ee2e8d 100644
+index 07778162..97f258e0 100644
 --- a/src/main/java/com/massivecraft/factions/FPlayer.java
 +++ b/src/main/java/com/massivecraft/factions/FPlayer.java
 @@ -4,7 +4,6 @@ import com.massivecraft.factions.iface.EconomyParticipator;
@@ -70,9 +70,9 @@ index 56b71e00..a7ee2e8d 100644
 -
 -    boolean isSpyingChat();
 -
-     boolean showScoreboard();
+     void resetFactionData(boolean doSpoutUpdate);
  
-     void setShowScoreboard(boolean show);
+     void resetFactionData();
 diff --git a/src/main/java/com/massivecraft/factions/FactionsAPI.java b/src/main/java/com/massivecraft/factions/FactionsAPI.java
 index 1e301e4b..3ac68fef 100644
 --- a/src/main/java/com/massivecraft/factions/FactionsAPI.java
@@ -579,7 +579,7 @@ index ce7d6cec..fe3e7e57 100644
  
          public class Homes {
 diff --git a/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java b/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
-index 7575d611..1de7ae4c 100644
+index 3d3a41a2..e5e98cd9 100644
 --- a/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
 +++ b/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
 @@ -22,7 +22,6 @@ import com.massivecraft.factions.landraidcontrol.PowerControl;
@@ -599,7 +599,7 @@ index 7575d611..1de7ae4c 100644
      protected String id;
      protected String name;
      protected boolean monitorJoins;
-@@ -248,33 +245,6 @@ public abstract class MemoryFPlayer implements FPlayer {
+@@ -247,33 +244,6 @@ public abstract class MemoryFPlayer implements FPlayer {
          this.isAdminBypassing = val;
      }
  
@@ -633,7 +633,7 @@ index 7575d611..1de7ae4c 100644
      // FIELD: account
      public String getAccountId() {
          return this.getId();
-@@ -328,7 +298,6 @@ public abstract class MemoryFPlayer implements FPlayer {
+@@ -327,7 +297,6 @@ public abstract class MemoryFPlayer implements FPlayer {
          this.powerBoost = other.powerBoost;
          this.role = other.role;
          this.title = other.title;
@@ -641,7 +641,7 @@ index 7575d611..1de7ae4c 100644
          this.spyingChat = other.spyingChat;
          this.lastStoodAt = other.lastStoodAt;
          this.isAdminBypassing = other.isAdminBypassing;
-@@ -348,7 +317,6 @@ public abstract class MemoryFPlayer implements FPlayer {
+@@ -347,7 +316,6 @@ public abstract class MemoryFPlayer implements FPlayer {
          }
  
          this.factionId = "0"; // The default neutral faction

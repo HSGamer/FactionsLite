@@ -1,9 +1,10 @@
-From 8b59c7a4ab572704d2bf281c21dc6afa5fe8b4ef Mon Sep 17 00:00:00 2001
+From 0982954fee0b111918b36d7ebf6f834b5767dab5 Mon Sep 17 00:00:00 2001
 From: hsgamer <huynhqtienvtag@gmail.com>
 Date: Wed, 24 Jan 2024 13:09:24 +0700
 Subject: [PATCH] remove built-in scoreboard
 
 ---
+ .../com/massivecraft/factions/FPlayer.java    |   4 -
  .../massivecraft/factions/FactionsPlugin.java |   1 -
  .../massivecraft/factions/cmd/CmdDisband.java |   2 -
  .../massivecraft/factions/cmd/CmdHelp.java    |   1 -
@@ -12,7 +13,7 @@ Subject: [PATCH] remove built-in scoreboard
  .../massivecraft/factions/cmd/FCmdRoot.java   |   2 -
  .../cmd/relations/FRelationCommand.java       |   4 -
  .../factions/config/file/MainConfig.java      | 152 -----------
- .../factions/data/MemoryFPlayer.java          |  16 --
+ .../factions/data/MemoryFPlayer.java          |  27 --
  .../listeners/FactionsPlayerListener.java     |  24 --
  .../scoreboards/BufferedObjective.java        | 233 -----------------
  .../factions/scoreboards/FScoreboard.java     | 152 -----------
@@ -20,7 +21,7 @@ Subject: [PATCH] remove built-in scoreboard
  .../factions/scoreboards/FTeamWrapper.java    | 237 ------------------
  .../scoreboards/sidebar/FDefaultSidebar.java  |  69 -----
  .../scoreboards/sidebar/FInfoSidebar.java     |  44 ----
- 16 files changed, 1016 deletions(-)
+ 17 files changed, 1031 deletions(-)
  delete mode 100644 src/main/java/com/massivecraft/factions/cmd/CmdSB.java
  delete mode 100644 src/main/java/com/massivecraft/factions/scoreboards/BufferedObjective.java
  delete mode 100644 src/main/java/com/massivecraft/factions/scoreboards/FScoreboard.java
@@ -29,6 +30,21 @@ Subject: [PATCH] remove built-in scoreboard
  delete mode 100644 src/main/java/com/massivecraft/factions/scoreboards/sidebar/FDefaultSidebar.java
  delete mode 100644 src/main/java/com/massivecraft/factions/scoreboards/sidebar/FInfoSidebar.java
 
+diff --git a/src/main/java/com/massivecraft/factions/FPlayer.java b/src/main/java/com/massivecraft/factions/FPlayer.java
+index 56b71e00..07778162 100644
+--- a/src/main/java/com/massivecraft/factions/FPlayer.java
++++ b/src/main/java/com/massivecraft/factions/FPlayer.java
+@@ -100,10 +100,6 @@ public interface FPlayer extends EconomyParticipator, Selectable {
+ 
+     boolean isSpyingChat();
+ 
+-    boolean showScoreboard();
+-
+-    void setShowScoreboard(boolean show);
+-
+     void resetFactionData(boolean doSpoutUpdate);
+ 
+     void resetFactionData();
 diff --git a/src/main/java/com/massivecraft/factions/FactionsPlugin.java b/src/main/java/com/massivecraft/factions/FactionsPlugin.java
 index 5df6eb80..7943586c 100644
 --- a/src/main/java/com/massivecraft/factions/FactionsPlugin.java
@@ -355,7 +371,7 @@ index 21f40018..ce7d6cec 100644
          return magicPlugin;
      }
 diff --git a/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java b/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
-index 2e90eec8..7575d611 100644
+index 2e90eec8..3d3a41a2 100644
 --- a/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
 +++ b/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
 @@ -22,8 +22,6 @@ import com.massivecraft.factions.landraidcontrol.PowerControl;
@@ -367,7 +383,15 @@ index 2e90eec8..7575d611 100644
  import com.massivecraft.factions.struct.ChatMode;
  import com.massivecraft.factions.struct.Permission;
  import com.massivecraft.factions.tag.Tag;
-@@ -715,25 +713,11 @@ public abstract class MemoryFPlayer implements FPlayer {
+@@ -76,7 +74,6 @@ public abstract class MemoryFPlayer implements FPlayer {
+     protected String name;
+     protected boolean monitorJoins;
+     protected boolean spyingChat = false;
+-    protected boolean showScoreboard = true;
+     protected WarmUpUtil.Warmup warmup;
+     protected int warmupTask;
+     protected boolean isAdminBypassing = false;
+@@ -715,35 +712,11 @@ public abstract class MemoryFPlayer implements FPlayer {
              showChat = FactionsPlugin.getInstance().conf().factions().enterTitles().isAlsoShowChat();
          }
  
@@ -390,9 +414,19 @@ index 2e90eec8..7575d611 100644
 -        return showScoreboard && !toShow.isWarZone() && !toShow.isWilderness() && !toShow.isSafeZone() && FactionsPlugin.getInstance().conf().scoreboard().info().isEnabled() && FScoreboard.get(this) != null;
 -    }
 -
-     @Override
-     public boolean showScoreboard() {
-         return this.showScoreboard;
+-    @Override
+-    public boolean showScoreboard() {
+-        return this.showScoreboard;
+-    }
+-
+-    @Override
+-    public void setShowScoreboard(boolean show) {
+-        this.showScoreboard = show;
+-    }
+-
+     // -------------------------------
+     // Actions
+     // -------------------------------
 diff --git a/src/main/java/com/massivecraft/factions/listeners/FactionsPlayerListener.java b/src/main/java/com/massivecraft/factions/listeners/FactionsPlayerListener.java
 index d4592fa5..3ca835df 100644
 --- a/src/main/java/com/massivecraft/factions/listeners/FactionsPlayerListener.java
