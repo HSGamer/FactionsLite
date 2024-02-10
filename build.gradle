@@ -1,0 +1,11 @@
+plugins {
+    id 'ca.stellardrift.gitpatcher' version '1.1.0'
+}
+
+gitPatcher.patchedRepos {
+    'repo' {
+        submodule = 'upstream'
+        target = file('target')
+        patches = file('patches')
+    }
+}

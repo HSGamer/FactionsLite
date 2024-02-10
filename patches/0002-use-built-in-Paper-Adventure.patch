@@ -1,22 +1,11 @@
-From 4f172c5a288a5360071c561154df9e1e6a12d141 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: hsgamer <huynhqtienvtag@gmail.com>
 Date: Wed, 24 Jan 2024 14:11:58 +0700
 Subject: [PATCH] use built-in Paper Adventure
 
----
- modules/Legacy/pom.xml                        | 150 +-------
- modules/Main/pom.xml                          | 332 +++---------------
- .../massivecraft/factions/FactionsPlugin.java |  15 +-
- .../com/massivecraft/factions/cmd/CmdMap.java |   4 +-
- .../massivecraft/factions/cmd/CmdPerm.java    |   4 +-
- .../massivecraft/factions/cmd/CmdShow.java    |   6 +-
- .../factions/cmd/CmdTicketInfo.java           |   2 +-
- .../listeners/FactionsPlayerListener.java     |   4 +-
- .../massivecraft/factions/tag/FancyTag.java   |   2 +-
- 9 files changed, 62 insertions(+), 457 deletions(-)
 
 diff --git a/modules/Legacy/pom.xml b/modules/Legacy/pom.xml
-index 9f404729..d1e12175 100644
+index 9f4047292eda01bc2b58d9cf67543337d12c4be7..d1e12175fd3f8fd697c5b43f22bc7a3190a21eb4 100644
 --- a/modules/Legacy/pom.xml
 +++ b/modules/Legacy/pom.xml
 @@ -34,28 +34,6 @@
@@ -198,7 +187,7 @@ index 9f404729..d1e12175 100644
              </exclusions>
          </dependency>
 diff --git a/modules/Main/pom.xml b/modules/Main/pom.xml
-index 49595c79..eed2a2f9 100644
+index 49595c795ceae96f8d8cc171feb143179482f70b..eed2a2f94b5aa3a32c93f6bfd1a28237965cccc5 100644
 --- a/modules/Main/pom.xml
 +++ b/modules/Main/pom.xml
 @@ -1,4 +1,4 @@
@@ -681,7 +670,7 @@ index 49595c79..eed2a2f9 100644
          </dependency>
      </dependencies>
 diff --git a/src/main/java/com/massivecraft/factions/FactionsPlugin.java b/src/main/java/com/massivecraft/factions/FactionsPlugin.java
-index 7943586c..c54dab8f 100644
+index 7943586c502beaf822951f280ea905bc22589d6d..c54dab8fedfeced34ca91b05b3228bbfaf384a2e 100644
 --- a/src/main/java/com/massivecraft/factions/FactionsPlugin.java
 +++ b/src/main/java/com/massivecraft/factions/FactionsPlugin.java
 @@ -62,7 +62,6 @@ import com.massivecraft.factions.util.particle.ParticleProvider;
@@ -747,7 +736,7 @@ index 7943586c..c54dab8f 100644
          player.sendMessage(ChatColor.GREEN + "Get it at " + ChatColor.DARK_AQUA + "https://www.spigotmc.org/resources/factionsuuid.1035/");
      }
 diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdMap.java b/src/main/java/com/massivecraft/factions/cmd/CmdMap.java
-index 90fdacd6..f2d33b51 100644
+index 90fdacd61cdd9fbc08dc2f2176da4546999183fe..f2d33b51d7f538b7c3a2afd9fcaa4403e233f1ec 100644
 --- a/src/main/java/com/massivecraft/factions/cmd/CmdMap.java
 +++ b/src/main/java/com/massivecraft/factions/cmd/CmdMap.java
 @@ -5,7 +5,6 @@ import com.massivecraft.factions.FLocation;
@@ -770,7 +759,7 @@ index 90fdacd6..f2d33b51 100644
      }
  
 diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdPerm.java b/src/main/java/com/massivecraft/factions/cmd/CmdPerm.java
-index 0a602388..b8ffb1e7 100644
+index 0a6023888907d62786c6e1e307b9eacc37ebb439..b8ffb1e78a02031500435e66a0d56447d214d183 100644
 --- a/src/main/java/com/massivecraft/factions/cmd/CmdPerm.java
 +++ b/src/main/java/com/massivecraft/factions/cmd/CmdPerm.java
 @@ -71,7 +71,7 @@ public class CmdPerm extends FCommand {
@@ -792,7 +781,7 @@ index 0a602388..b8ffb1e7 100644
  
      private void listSelectors(CommandContext context, Audience audience, LinkedHashMap<PermSelector, Map<String, Boolean>> permissions, TranslationsConfig.Commands.Permissions tl) {
 diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdShow.java b/src/main/java/com/massivecraft/factions/cmd/CmdShow.java
-index 2fa6c4c8..8f2c212f 100644
+index 2fa6c4c8f6976ffec0a356a65df431b1fa8be464..8f2c212f79232eff2fbe74186f9fdd503e709b54 100644
 --- a/src/main/java/com/massivecraft/factions/cmd/CmdShow.java
 +++ b/src/main/java/com/massivecraft/factions/cmd/CmdShow.java
 @@ -11,7 +11,6 @@ import com.massivecraft.factions.tag.FancyTag;
@@ -830,7 +819,7 @@ index 2fa6c4c8..8f2c212f 100644
          }
      }
 diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdTicketInfo.java b/src/main/java/com/massivecraft/factions/cmd/CmdTicketInfo.java
-index a7c1eabc..6e0a2548 100644
+index a7c1eabc465900195a65b8c1e2ad11b7ab4ad518..6e0a2548a0570b85f44cba09ea2507ad1ee62c89 100644
 --- a/src/main/java/com/massivecraft/factions/cmd/CmdTicketInfo.java
 +++ b/src/main/java/com/massivecraft/factions/cmd/CmdTicketInfo.java
 @@ -131,7 +131,7 @@ public class CmdTicketInfo extends FCommand {
@@ -843,7 +832,7 @@ index a7c1eabc..6e0a2548 100644
          boolean full = context.argAsString(0, "").equalsIgnoreCase("full");
  
 diff --git a/src/main/java/com/massivecraft/factions/listeners/FactionsPlayerListener.java b/src/main/java/com/massivecraft/factions/listeners/FactionsPlayerListener.java
-index 3ca835df..21fe7f9c 100644
+index 3ca835df458e3a68043dda179fb96a9b1083d6b9..21fe7f9cf143d451a3f8b4e46217391dd0cca8eb 100644
 --- a/src/main/java/com/massivecraft/factions/listeners/FactionsPlayerListener.java
 +++ b/src/main/java/com/massivecraft/factions/listeners/FactionsPlayerListener.java
 @@ -18,7 +18,6 @@ import com.massivecraft.factions.struct.Permission;
@@ -866,7 +855,7 @@ index 3ca835df..21fe7f9c 100644
                  showTimes.put(player.getUniqueId(), System.currentTimeMillis() + FactionsPlugin.getInstance().conf().commands().map().getCooldown());
              }
 diff --git a/src/main/java/com/massivecraft/factions/tag/FancyTag.java b/src/main/java/com/massivecraft/factions/tag/FancyTag.java
-index 850aa5a5..66d1c6ea 100644
+index 850aa5a5a4aa2dc7f63dcf408a61afd04e43ce6b..66d1c6ea5828a6afe4bba990a727b800146336a1 100644
 --- a/src/main/java/com/massivecraft/factions/tag/FancyTag.java
 +++ b/src/main/java/com/massivecraft/factions/tag/FancyTag.java
 @@ -107,7 +107,7 @@ public enum FancyTag implements Tag {
@@ -878,6 +867,3 @@ index 850aa5a5..66d1c6ea 100644
              }
              lb = true;
              tip.append(LegacyComponentSerializer.legacySection().deserialize(tipLine));
--- 
-2.43.0
-

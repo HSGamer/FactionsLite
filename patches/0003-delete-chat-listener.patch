@@ -1,33 +1,11 @@
-From a0cf4e7383c351803dc82c6cf18e16148a74fd93 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: hsgamer <huynhqtienvtag@gmail.com>
 Date: Mon, 29 Jan 2024 16:51:10 +0700
 Subject: [PATCH] delete chat listener
 
----
- modules/Main/pom.xml                          |   6 -
- .../com/massivecraft/factions/FPlayer.java    |  13 --
- .../massivecraft/factions/FactionsAPI.java    |   8 -
- .../massivecraft/factions/FactionsPlugin.java |  49 -----
- .../massivecraft/factions/cmd/CmdChat.java    |  98 ---------
- .../massivecraft/factions/cmd/CmdChatSpy.java |  38 ----
- .../massivecraft/factions/cmd/CmdHelp.java    |   3 -
- .../factions/cmd/CmdToggleAllianceChat.java   |  38 ----
- .../massivecraft/factions/cmd/FCmdRoot.java   |   6 -
- .../factions/config/file/MainConfig.java      |  87 --------
- .../factions/data/MemoryFPlayer.java          |  32 ---
- .../listeners/FactionsChatListener.java       | 192 ------------------
- .../listeners/FactionsPlayerListener.java     |  14 --
- .../factions/struct/ChatMode.java             |  47 -----
- src/main/resources/plugin.yml                 |  11 +-
- 15 files changed, 1 insertion(+), 641 deletions(-)
- delete mode 100644 src/main/java/com/massivecraft/factions/cmd/CmdChat.java
- delete mode 100644 src/main/java/com/massivecraft/factions/cmd/CmdChatSpy.java
- delete mode 100644 src/main/java/com/massivecraft/factions/cmd/CmdToggleAllianceChat.java
- delete mode 100644 src/main/java/com/massivecraft/factions/listeners/FactionsChatListener.java
- delete mode 100644 src/main/java/com/massivecraft/factions/struct/ChatMode.java
 
 diff --git a/modules/Main/pom.xml b/modules/Main/pom.xml
-index eed2a2f9..116e4bb2 100644
+index eed2a2f94b5aa3a32c93f6bfd1a28237965cccc5..116e4bb2360c0aaec9d2c92e361ae16d520c234a 100644
 --- a/modules/Main/pom.xml
 +++ b/modules/Main/pom.xml
 @@ -189,12 +189,6 @@
@@ -44,7 +22,7 @@ index eed2a2f9..116e4bb2 100644
              <groupId>org.dynmap</groupId>
              <artifactId>dynmap</artifactId>
 diff --git a/src/main/java/com/massivecraft/factions/FPlayer.java b/src/main/java/com/massivecraft/factions/FPlayer.java
-index 07778162..97f258e0 100644
+index 07778162efa386b33ae3e3e39541d762e5e037f8..97f258e0b536f90891b9cc56db0826af78845847 100644
 --- a/src/main/java/com/massivecraft/factions/FPlayer.java
 +++ b/src/main/java/com/massivecraft/factions/FPlayer.java
 @@ -4,7 +4,6 @@ import com.massivecraft.factions.iface.EconomyParticipator;
@@ -75,7 +53,7 @@ index 07778162..97f258e0 100644
  
      void resetFactionData();
 diff --git a/src/main/java/com/massivecraft/factions/FactionsAPI.java b/src/main/java/com/massivecraft/factions/FactionsAPI.java
-index 1e301e4b..3ac68fef 100644
+index 1e301e4bb7f9e4fc564dae634cc59d92dd6318e3..3ac68fef51553f55566b8fd7da1e046f348c2389 100644
 --- a/src/main/java/com/massivecraft/factions/FactionsAPI.java
 +++ b/src/main/java/com/massivecraft/factions/FactionsAPI.java
 @@ -17,14 +17,6 @@ public interface FactionsAPI {
@@ -94,7 +72,7 @@ index 1e301e4b..3ac68fef 100644
  
      String getPlayerFactionTagRelation(Player speaker, Player listener);
 diff --git a/src/main/java/com/massivecraft/factions/FactionsPlugin.java b/src/main/java/com/massivecraft/factions/FactionsPlugin.java
-index c54dab8f..be822268 100644
+index c54dab8fedfeced34ca91b05b3228bbfaf384a2e..be822268a3cd078ce890d07cd2233b40430d3299 100644
 --- a/src/main/java/com/massivecraft/factions/FactionsPlugin.java
 +++ b/src/main/java/com/massivecraft/factions/FactionsPlugin.java
 @@ -27,7 +27,6 @@ import com.massivecraft.factions.integration.dynmap.EngineDynmap;
@@ -211,7 +189,7 @@ index c54dab8f..be822268 100644
      // Get a player's faction tag (faction name), mainly for usage by chat plugins for local/channel chat
 diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdChat.java b/src/main/java/com/massivecraft/factions/cmd/CmdChat.java
 deleted file mode 100644
-index dacf8b40..00000000
+index dacf8b4017d7f00d3b6117e3717c4d444c90f1c1..0000000000000000000000000000000000000000
 --- a/src/main/java/com/massivecraft/factions/cmd/CmdChat.java
 +++ /dev/null
 @@ -1,98 +0,0 @@
@@ -315,7 +293,7 @@ index dacf8b40..00000000
 -}
 diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdChatSpy.java b/src/main/java/com/massivecraft/factions/cmd/CmdChatSpy.java
 deleted file mode 100644
-index 0b256fc9..00000000
+index 0b256fc975c4046f6c8a395f82b6cfefc71f999a..0000000000000000000000000000000000000000
 --- a/src/main/java/com/massivecraft/factions/cmd/CmdChatSpy.java
 +++ /dev/null
 @@ -1,38 +0,0 @@
@@ -359,7 +337,7 @@ index 0b256fc9..00000000
 -}
 \ No newline at end of file
 diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdHelp.java b/src/main/java/com/massivecraft/factions/cmd/CmdHelp.java
-index d57c8ca9..4cdf9d33 100644
+index d57c8ca9533d20a10f39176c7bc055c918c943f8..4cdf9d338981c802d79af5918da6efa7ba5eac86 100644
 --- a/src/main/java/com/massivecraft/factions/cmd/CmdHelp.java
 +++ b/src/main/java/com/massivecraft/factions/cmd/CmdHelp.java
 @@ -71,8 +71,6 @@ public class CmdHelp extends FCommand {
@@ -381,7 +359,7 @@ index d57c8ca9..4cdf9d33 100644
          pageLines.add(FCmdRoot.getInstance().cmdPowerBoost.getUsageTemplate(context, true));
 diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdToggleAllianceChat.java b/src/main/java/com/massivecraft/factions/cmd/CmdToggleAllianceChat.java
 deleted file mode 100644
-index e53328ae..00000000
+index e53328aeecb90aa80b952bde69f246529e56f2e8..0000000000000000000000000000000000000000
 --- a/src/main/java/com/massivecraft/factions/cmd/CmdToggleAllianceChat.java
 +++ /dev/null
 @@ -1,38 +0,0 @@
@@ -424,7 +402,7 @@ index e53328ae..00000000
 -    }
 -}
 diff --git a/src/main/java/com/massivecraft/factions/cmd/FCmdRoot.java b/src/main/java/com/massivecraft/factions/cmd/FCmdRoot.java
-index e69242fb..f3ea992c 100644
+index e69242fb37f764a8cb742845c7a81112bb3c48f6..f3ea992cace4bc7d98de96bf56b7786e12e5302f 100644
 --- a/src/main/java/com/massivecraft/factions/cmd/FCmdRoot.java
 +++ b/src/main/java/com/massivecraft/factions/cmd/FCmdRoot.java
 @@ -50,8 +50,6 @@ public class FCmdRoot extends FCommand implements CommandExecutor {
@@ -455,7 +433,7 @@ index e69242fb..f3ea992c 100644
          this.addSubCommand(this.cmdCoords);
          this.addSubCommand(this.cmdCreate);
 diff --git a/src/main/java/com/massivecraft/factions/config/file/MainConfig.java b/src/main/java/com/massivecraft/factions/config/file/MainConfig.java
-index ce7d6cec..fe3e7e57 100644
+index ce7d6cec81f02c38f765408b19d795fbe89dc610..fe3e7e57df8a719d62ec853f3a1638b99fe3cb70 100644
 --- a/src/main/java/com/massivecraft/factions/config/file/MainConfig.java
 +++ b/src/main/java/com/massivecraft/factions/config/file/MainConfig.java
 @@ -1,6 +1,5 @@
@@ -580,7 +558,7 @@ index ce7d6cec..fe3e7e57 100644
  
          public class Homes {
 diff --git a/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java b/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
-index 3d3a41a2..e5e98cd9 100644
+index 3d3a41a2538ad97ead12686d4b585c0a29f38c1c..e5e98cd96aed0006a87e84b39ccd8811373d9a23 100644
 --- a/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
 +++ b/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
 @@ -22,7 +22,6 @@ import com.massivecraft.factions.landraidcontrol.PowerControl;
@@ -652,7 +630,7 @@ index 3d3a41a2..e5e98cd9 100644
          this.autoClaimFor = null;
 diff --git a/src/main/java/com/massivecraft/factions/listeners/FactionsChatListener.java b/src/main/java/com/massivecraft/factions/listeners/FactionsChatListener.java
 deleted file mode 100644
-index 6e32a324..00000000
+index 6e32a324837f064d71bb3066015db20c6094acea..0000000000000000000000000000000000000000
 --- a/src/main/java/com/massivecraft/factions/listeners/FactionsChatListener.java
 +++ /dev/null
 @@ -1,192 +0,0 @@
@@ -849,7 +827,7 @@ index 6e32a324..00000000
 -
 -}
 diff --git a/src/main/java/com/massivecraft/factions/listeners/FactionsPlayerListener.java b/src/main/java/com/massivecraft/factions/listeners/FactionsPlayerListener.java
-index 21fe7f9c..68ccc053 100644
+index 21fe7f9cf143d451a3f8b4e46217391dd0cca8eb..68ccc053ff488dd16adb481ef80ab833fab36547 100644
 --- a/src/main/java/com/massivecraft/factions/listeners/FactionsPlayerListener.java
 +++ b/src/main/java/com/massivecraft/factions/listeners/FactionsPlayerListener.java
 @@ -13,7 +13,6 @@ import com.massivecraft.factions.integration.Graves;
@@ -889,7 +867,7 @@ index 21fe7f9c..68ccc053 100644
                  plugin.getLogger().info("[PLAYER_COMMAND] " + event.getPlayer().getName() + ": " + event.getMessage());
 diff --git a/src/main/java/com/massivecraft/factions/struct/ChatMode.java b/src/main/java/com/massivecraft/factions/struct/ChatMode.java
 deleted file mode 100644
-index 0d31ca8b..00000000
+index 0d31ca8bc03ab6fcb21d14ac13d2ccf9fae6f4b9..0000000000000000000000000000000000000000
 --- a/src/main/java/com/massivecraft/factions/struct/ChatMode.java
 +++ /dev/null
 @@ -1,47 +0,0 @@
@@ -941,7 +919,7 @@ index 0d31ca8b..00000000
 -    }
 -}
 diff --git a/src/main/resources/plugin.yml b/src/main/resources/plugin.yml
-index 094d9fac..7f56f6e2 100644
+index 094d9fac42bdd8c7fddaa9d06bf9bb214eb3269b..7f56f6e2c908168bddf1567e5eda8e2cf01b1fda 100644
 --- a/src/main/resources/plugin.yml
 +++ b/src/main/resources/plugin.yml
 @@ -43,7 +43,7 @@ permissions:
@@ -997,6 +975,3 @@ index 094d9fac..7f56f6e2 100644
    factions.dontlosepoweroffline:
      description: Don't lose power for being offline.
    factions.ahome:
--- 
-2.43.0
-

@@ -1,38 +1,11 @@
-From 6477fcafe40bf5248717211a18c06b5a327460e9 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: hsgamer <huynhqtienvtag@gmail.com>
 Date: Wed, 24 Jan 2024 13:09:24 +0700
 Subject: [PATCH] remove built-in scoreboard
 
----
- .../com/massivecraft/factions/FPlayer.java    |   4 -
- .../massivecraft/factions/FactionsPlugin.java |   1 -
- .../massivecraft/factions/cmd/CmdDisband.java |   2 -
- .../massivecraft/factions/cmd/CmdHelp.java    |   1 -
- .../com/massivecraft/factions/cmd/CmdSB.java  |  35 ---
- .../com/massivecraft/factions/cmd/CmdTag.java |   3 -
- .../massivecraft/factions/cmd/FCmdRoot.java   |   2 -
- .../cmd/relations/FRelationCommand.java       |   4 -
- .../factions/config/file/MainConfig.java      | 152 -----------
- .../factions/data/MemoryFPlayer.java          |  27 --
- .../listeners/FactionsPlayerListener.java     |  24 --
- .../scoreboards/BufferedObjective.java        | 233 -----------------
- .../factions/scoreboards/FScoreboard.java     | 152 -----------
- .../scoreboards/FSidebarProvider.java         |  41 ---
- .../factions/scoreboards/FTeamWrapper.java    | 237 ------------------
- .../scoreboards/sidebar/FDefaultSidebar.java  |  69 -----
- .../scoreboards/sidebar/FInfoSidebar.java     |  44 ----
- src/main/resources/plugin.yml                 |   3 -
- 18 files changed, 1034 deletions(-)
- delete mode 100644 src/main/java/com/massivecraft/factions/cmd/CmdSB.java
- delete mode 100644 src/main/java/com/massivecraft/factions/scoreboards/BufferedObjective.java
- delete mode 100644 src/main/java/com/massivecraft/factions/scoreboards/FScoreboard.java
- delete mode 100644 src/main/java/com/massivecraft/factions/scoreboards/FSidebarProvider.java
- delete mode 100644 src/main/java/com/massivecraft/factions/scoreboards/FTeamWrapper.java
- delete mode 100644 src/main/java/com/massivecraft/factions/scoreboards/sidebar/FDefaultSidebar.java
- delete mode 100644 src/main/java/com/massivecraft/factions/scoreboards/sidebar/FInfoSidebar.java
 
 diff --git a/src/main/java/com/massivecraft/factions/FPlayer.java b/src/main/java/com/massivecraft/factions/FPlayer.java
-index 56b71e00..07778162 100644
+index 56b71e00a46881759e952f73bd3a294342832ca8..07778162efa386b33ae3e3e39541d762e5e037f8 100644
 --- a/src/main/java/com/massivecraft/factions/FPlayer.java
 +++ b/src/main/java/com/massivecraft/factions/FPlayer.java
 @@ -100,10 +100,6 @@ public interface FPlayer extends EconomyParticipator, Selectable {
@@ -47,7 +20,7 @@ index 56b71e00..07778162 100644
  
      void resetFactionData();
 diff --git a/src/main/java/com/massivecraft/factions/FactionsPlugin.java b/src/main/java/com/massivecraft/factions/FactionsPlugin.java
-index 5df6eb80..7943586c 100644
+index 5df6eb80ec051deed2616ae0f81a23e19ce01d2b..7943586c502beaf822951f280ea905bc22589d6d 100644
 --- a/src/main/java/com/massivecraft/factions/FactionsPlugin.java
 +++ b/src/main/java/com/massivecraft/factions/FactionsPlugin.java
 @@ -728,7 +728,6 @@ public class FactionsPlugin extends JavaPlugin implements FactionsAPI {
@@ -59,7 +32,7 @@ index 5df6eb80..7943586c 100644
          // Event listeners
          this.metricsDrillPie("event_listeners", () -> {
 diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdDisband.java b/src/main/java/com/massivecraft/factions/cmd/CmdDisband.java
-index 16050f11..ed176159 100644
+index 16050f1150b2cccccd2a346a66446da29c0d71d3..ed17615967e5c2a1207db5df8ff4c63fdf5b042f 100644
 --- a/src/main/java/com/massivecraft/factions/cmd/CmdDisband.java
 +++ b/src/main/java/com/massivecraft/factions/cmd/CmdDisband.java
 @@ -9,7 +9,6 @@ import com.massivecraft.factions.event.FPlayerLeaveEvent;
@@ -79,7 +52,7 @@ index 16050f11..ed176159 100644
  
      @Override
 diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdHelp.java b/src/main/java/com/massivecraft/factions/cmd/CmdHelp.java
-index cd8bbfe9..d57c8ca9 100644
+index cd8bbfe9079f890d7387a562eb61edc0c28d779e..d57c8ca9533d20a10f39176c7bc055c918c943f8 100644
 --- a/src/main/java/com/massivecraft/factions/cmd/CmdHelp.java
 +++ b/src/main/java/com/massivecraft/factions/cmd/CmdHelp.java
 @@ -112,7 +112,6 @@ public class CmdHelp extends FCommand {
@@ -92,7 +65,7 @@ index cd8bbfe9..d57c8ca9 100644
          pageLines.add(plugin.txt().parse(TL.COMMAND_HELP_PLAYERTITLES.toString()));
 diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdSB.java b/src/main/java/com/massivecraft/factions/cmd/CmdSB.java
 deleted file mode 100644
-index 3e70f1a1..00000000
+index 3e70f1a191d660b400187bef28f1bc1cfc12cb33..0000000000000000000000000000000000000000
 --- a/src/main/java/com/massivecraft/factions/cmd/CmdSB.java
 +++ /dev/null
 @@ -1,35 +0,0 @@
@@ -132,7 +105,7 @@ index 3e70f1a1..00000000
 -    }
 -}
 diff --git a/src/main/java/com/massivecraft/factions/cmd/CmdTag.java b/src/main/java/com/massivecraft/factions/cmd/CmdTag.java
-index 7449a700..8e881852 100644
+index 7449a700e7ec5c1a96d943548408399893336262..8e881852aea0fab5263a70e32d9080a546c221d7 100644
 --- a/src/main/java/com/massivecraft/factions/cmd/CmdTag.java
 +++ b/src/main/java/com/massivecraft/factions/cmd/CmdTag.java
 @@ -7,7 +7,6 @@ import com.massivecraft.factions.Factions;
@@ -153,7 +126,7 @@ index 7449a700..8e881852 100644
  
      @Override
 diff --git a/src/main/java/com/massivecraft/factions/cmd/FCmdRoot.java b/src/main/java/com/massivecraft/factions/cmd/FCmdRoot.java
-index b94ea186..e69242fb 100644
+index b94ea186c30dfcf7c2e1a4d33e37a69ff120f996..e69242fb37f764a8cb742845c7a81112bb3c48f6 100644
 --- a/src/main/java/com/massivecraft/factions/cmd/FCmdRoot.java
 +++ b/src/main/java/com/massivecraft/factions/cmd/FCmdRoot.java
 @@ -99,7 +99,6 @@ public class FCmdRoot extends FCommand implements CommandExecutor {
@@ -173,7 +146,7 @@ index b94ea186..e69242fb 100644
          this.addSubCommand(this.cmdAnnounce);
          this.addSubCommand(this.cmdSeeChunk);
 diff --git a/src/main/java/com/massivecraft/factions/cmd/relations/FRelationCommand.java b/src/main/java/com/massivecraft/factions/cmd/relations/FRelationCommand.java
-index 7656bd8a..14c6922c 100644
+index 7656bd8adcab764d3cb0ed462bb3d590a9d11793..14c6922ce5f815e862bd5468614f6164d39fe30c 100644
 --- a/src/main/java/com/massivecraft/factions/cmd/relations/FRelationCommand.java
 +++ b/src/main/java/com/massivecraft/factions/cmd/relations/FRelationCommand.java
 @@ -9,7 +9,6 @@ import com.massivecraft.factions.event.FactionRelationEvent;
@@ -195,7 +168,7 @@ index 7656bd8a..14c6922c 100644
  
      private boolean hasMaxRelations(Faction them, Relation targetRelation, CommandContext context) {
 diff --git a/src/main/java/com/massivecraft/factions/config/file/MainConfig.java b/src/main/java/com/massivecraft/factions/config/file/MainConfig.java
-index 21f40018..ce7d6cec 100644
+index 21f4001849fed11eca1270afea60073bdd86732e..ce7d6cec81f02c38f765408b19d795fbe89dc610 100644
 --- a/src/main/java/com/massivecraft/factions/config/file/MainConfig.java
 +++ b/src/main/java/com/massivecraft/factions/config/file/MainConfig.java
 @@ -2691,153 +2691,6 @@ public class MainConfig {
@@ -372,7 +345,7 @@ index 21f40018..ce7d6cec 100644
          return magicPlugin;
      }
 diff --git a/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java b/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
-index 2e90eec8..3d3a41a2 100644
+index 2e90eec8da0839904356955acde76b898c9956a2..3d3a41a2538ad97ead12686d4b585c0a29f38c1c 100644
 --- a/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
 +++ b/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
 @@ -22,8 +22,6 @@ import com.massivecraft.factions.landraidcontrol.PowerControl;
@@ -429,7 +402,7 @@ index 2e90eec8..3d3a41a2 100644
      // Actions
      // -------------------------------
 diff --git a/src/main/java/com/massivecraft/factions/listeners/FactionsPlayerListener.java b/src/main/java/com/massivecraft/factions/listeners/FactionsPlayerListener.java
-index d4592fa5..3ca835df 100644
+index d4592fa58686d4343ad1dc14e6554e46b9439c91..3ca835df458e3a68043dda179fb96a9b1083d6b9 100644
 --- a/src/main/java/com/massivecraft/factions/listeners/FactionsPlayerListener.java
 +++ b/src/main/java/com/massivecraft/factions/listeners/FactionsPlayerListener.java
 @@ -8,16 +8,11 @@ import com.massivecraft.factions.Faction;
@@ -498,7 +471,7 @@ index d4592fa5..3ca835df 100644
          if (!plugin.worldUtil().isEnabled(event.getPlayer().getWorld())) {
 diff --git a/src/main/java/com/massivecraft/factions/scoreboards/BufferedObjective.java b/src/main/java/com/massivecraft/factions/scoreboards/BufferedObjective.java
 deleted file mode 100644
-index eb68c3d4..00000000
+index eb68c3d4a133ede040ee084d4cef77fab27c9e2a..0000000000000000000000000000000000000000
 --- a/src/main/java/com/massivecraft/factions/scoreboards/BufferedObjective.java
 +++ /dev/null
 @@ -1,233 +0,0 @@
@@ -737,7 +710,7 @@ index eb68c3d4..00000000
 -}
 diff --git a/src/main/java/com/massivecraft/factions/scoreboards/FScoreboard.java b/src/main/java/com/massivecraft/factions/scoreboards/FScoreboard.java
 deleted file mode 100644
-index e077cbac..00000000
+index e077cbaca1b6ed35887332b7442cc26a3ce6f869..0000000000000000000000000000000000000000
 --- a/src/main/java/com/massivecraft/factions/scoreboards/FScoreboard.java
 +++ /dev/null
 @@ -1,152 +0,0 @@
@@ -895,7 +868,7 @@ index e077cbac..00000000
 -}
 diff --git a/src/main/java/com/massivecraft/factions/scoreboards/FSidebarProvider.java b/src/main/java/com/massivecraft/factions/scoreboards/FSidebarProvider.java
 deleted file mode 100644
-index 4ac68361..00000000
+index 4ac68361c5c4a558e498869020607793b4d09fad..0000000000000000000000000000000000000000
 --- a/src/main/java/com/massivecraft/factions/scoreboards/FSidebarProvider.java
 +++ /dev/null
 @@ -1,41 +0,0 @@
@@ -942,7 +915,7 @@ index 4ac68361..00000000
 -}
 diff --git a/src/main/java/com/massivecraft/factions/scoreboards/FTeamWrapper.java b/src/main/java/com/massivecraft/factions/scoreboards/FTeamWrapper.java
 deleted file mode 100644
-index a9a7b33f..00000000
+index a9a7b33fd470d181bf070265fbc065de307682ec..0000000000000000000000000000000000000000
 --- a/src/main/java/com/massivecraft/factions/scoreboards/FTeamWrapper.java
 +++ /dev/null
 @@ -1,237 +0,0 @@
@@ -1185,7 +1158,7 @@ index a9a7b33f..00000000
 -}
 diff --git a/src/main/java/com/massivecraft/factions/scoreboards/sidebar/FDefaultSidebar.java b/src/main/java/com/massivecraft/factions/scoreboards/sidebar/FDefaultSidebar.java
 deleted file mode 100644
-index 6a5f3cf9..00000000
+index 6a5f3cf971814e7caaf76f91926bcd3e7473e968..0000000000000000000000000000000000000000
 --- a/src/main/java/com/massivecraft/factions/scoreboards/sidebar/FDefaultSidebar.java
 +++ /dev/null
 @@ -1,69 +0,0 @@
@@ -1260,7 +1233,7 @@ index 6a5f3cf9..00000000
 -}
 diff --git a/src/main/java/com/massivecraft/factions/scoreboards/sidebar/FInfoSidebar.java b/src/main/java/com/massivecraft/factions/scoreboards/sidebar/FInfoSidebar.java
 deleted file mode 100644
-index a4b633e0..00000000
+index a4b633e0f64d7bfe1c30c6578fbb0086dc786cf1..0000000000000000000000000000000000000000
 --- a/src/main/java/com/massivecraft/factions/scoreboards/sidebar/FInfoSidebar.java
 +++ /dev/null
 @@ -1,44 +0,0 @@
@@ -1309,7 +1282,7 @@ index a4b633e0..00000000
 -    }
 -}
 diff --git a/src/main/resources/plugin.yml b/src/main/resources/plugin.yml
-index c077a3d1..094d9fac 100644
+index c077a3d18a208cce850ade8f3dc3337d49052c25..094d9fac42bdd8c7fddaa9d06bf9bb214eb3269b 100644
 --- a/src/main/resources/plugin.yml
 +++ b/src/main/resources/plugin.yml
 @@ -101,7 +101,6 @@ permissions:
@@ -1329,6 +1302,3 @@ index c077a3d1..094d9fac 100644
    factions.showinvites:
      description: show pending invites to your faction
    factions.seechunk:
--- 
-2.43.0
-
