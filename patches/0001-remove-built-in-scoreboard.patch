@@ -168,10 +168,10 @@ index 7656bd8adcab764d3cb0ed462bb3d590a9d11793..14c6922ce5f815e862bd5468614f6164
  
      private boolean hasMaxRelations(Faction them, Relation targetRelation, CommandContext context) {
 diff --git a/src/main/java/com/massivecraft/factions/config/file/MainConfig.java b/src/main/java/com/massivecraft/factions/config/file/MainConfig.java
-index 21f4001849fed11eca1270afea60073bdd86732e..ce7d6cec81f02c38f765408b19d795fbe89dc610 100644
+index 6e101abf6adc672b73a0ee71ddf9e3cd9c51de6c..c77acd75de558e2984a8cfab15c80b7f4e904951 100644
 --- a/src/main/java/com/massivecraft/factions/config/file/MainConfig.java
 +++ b/src/main/java/com/massivecraft/factions/config/file/MainConfig.java
-@@ -2691,153 +2691,6 @@ public class MainConfig {
+@@ -2717,153 +2717,6 @@ public class MainConfig {
          }
      }
  
@@ -325,7 +325,7 @@ index 21f4001849fed11eca1270afea60073bdd86732e..ce7d6cec81f02c38f765408b19d795fb
      public class LWC {
          private boolean enabled = true;
          private boolean resetLocksOnUnclaim = false;
-@@ -3007,7 +2860,6 @@ public class MainConfig {
+@@ -3033,7 +2886,6 @@ public class MainConfig {
      @Comment("Data storage settings")
      private Data data = new Data();
      private RestrictWorlds restrictWorlds = new RestrictWorlds();
@@ -333,7 +333,7 @@ index 21f4001849fed11eca1270afea60073bdd86732e..ce7d6cec81f02c38f765408b19d795fb
      @Comment("LWC integration\n" +
              "This support targets the modern fork of LWC, called LWC Extended.\n" +
              "You can find it here: https://www.spigotmc.org/resources/lwc-extended.69551/\n" +
-@@ -3069,10 +2921,6 @@ public class MainConfig {
+@@ -3095,10 +2947,6 @@ public class MainConfig {
          return restrictWorlds;
      }
  
@@ -345,7 +345,7 @@ index 21f4001849fed11eca1270afea60073bdd86732e..ce7d6cec81f02c38f765408b19d795fb
          return magicPlugin;
      }
 diff --git a/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java b/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
-index 2e90eec8da0839904356955acde76b898c9956a2..3d3a41a2538ad97ead12686d4b585c0a29f38c1c 100644
+index 25acb6c4650326d8670a83c98133229efca2e10f..f4106e1efccb32773477e2ec115bc76f21bfc2f7 100644
 --- a/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
 +++ b/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
 @@ -22,8 +22,6 @@ import com.massivecraft.factions.landraidcontrol.PowerControl;
@@ -365,7 +365,7 @@ index 2e90eec8da0839904356955acde76b898c9956a2..3d3a41a2538ad97ead12686d4b585c0a
      protected WarmUpUtil.Warmup warmup;
      protected int warmupTask;
      protected boolean isAdminBypassing = false;
-@@ -715,35 +712,11 @@ public abstract class MemoryFPlayer implements FPlayer {
+@@ -720,35 +717,11 @@ public abstract class MemoryFPlayer implements FPlayer {
              showChat = FactionsPlugin.getInstance().conf().factions().enterTitles().isAlsoShowChat();
          }
  

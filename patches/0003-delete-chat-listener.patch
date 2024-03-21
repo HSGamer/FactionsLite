@@ -5,7 +5,7 @@ Subject: [PATCH] delete chat listener
 
 
 diff --git a/modules/Main/pom.xml b/modules/Main/pom.xml
-index 59947e2433e9602d4eb240956c035a5a8428a47d..823c4b449ea6916e30636c17e96fd56977443e63 100644
+index 1b50b36c8fd9b09d0edb905708c0e7ca45e0015f..e3f896d5ada50133675e6d3e30d85784428eff83 100644
 --- a/modules/Main/pom.xml
 +++ b/modules/Main/pom.xml
 @@ -189,12 +189,6 @@
@@ -433,7 +433,7 @@ index e69242fb37f764a8cb742845c7a81112bb3c48f6..f3ea992cace4bc7d98de96bf56b7786e
          this.addSubCommand(this.cmdCoords);
          this.addSubCommand(this.cmdCreate);
 diff --git a/src/main/java/com/massivecraft/factions/config/file/MainConfig.java b/src/main/java/com/massivecraft/factions/config/file/MainConfig.java
-index ce7d6cec81f02c38f765408b19d795fbe89dc610..fe3e7e57df8a719d62ec853f3a1638b99fe3cb70 100644
+index c77acd75de558e2984a8cfab15c80b7f4e904951..6ecee0ad271cda339f1f5783658b9579f2b5e9e1 100644
 --- a/src/main/java/com/massivecraft/factions/config/file/MainConfig.java
 +++ b/src/main/java/com/massivecraft/factions/config/file/MainConfig.java
 @@ -1,6 +1,5 @@
@@ -443,7 +443,7 @@ index ce7d6cec81f02c38f765408b19d795fbe89dc610..fe3e7e57df8a719d62ec853f3a1638b9
  import com.massivecraft.factions.config.annotation.Comment;
  import com.massivecraft.factions.config.annotation.WipeOnReload;
  import com.massivecraft.factions.perms.Relation;
-@@ -913,92 +912,20 @@ public class MainConfig {
+@@ -932,92 +931,20 @@ public class MainConfig {
          }
  
          public class Chat {
@@ -536,7 +536,7 @@ index ce7d6cec81f02c38f765408b19d795fbe89dc610..fe3e7e57df8a719d62ec853f3a1638b9
              public boolean isBroadcastDescriptionChanges() {
                  return broadcastDescriptionChanges;
              }
-@@ -1006,20 +933,6 @@ public class MainConfig {
+@@ -1025,20 +952,6 @@ public class MainConfig {
              public boolean isBroadcastTagChanges() {
                  return broadcastTagChanges;
              }
@@ -558,7 +558,7 @@ index ce7d6cec81f02c38f765408b19d795fbe89dc610..fe3e7e57df8a719d62ec853f3a1638b9
  
          public class Homes {
 diff --git a/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java b/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
-index 3d3a41a2538ad97ead12686d4b585c0a29f38c1c..e5e98cd96aed0006a87e84b39ccd8811373d9a23 100644
+index f4106e1efccb32773477e2ec115bc76f21bfc2f7..0ca28402e255d585d81c467d18cd2cfaacddb10b 100644
 --- a/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
 +++ b/src/main/java/com/massivecraft/factions/data/MemoryFPlayer.java
 @@ -22,7 +22,6 @@ import com.massivecraft.factions.landraidcontrol.PowerControl;

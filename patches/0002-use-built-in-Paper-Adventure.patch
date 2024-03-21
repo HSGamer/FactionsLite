@@ -5,7 +5,7 @@ Subject: [PATCH] use built-in Paper Adventure
 
 
 diff --git a/modules/Legacy/pom.xml b/modules/Legacy/pom.xml
-index 23779caab77558d01b4f56bd854ac7684499aa35..bf444c38f3ce0282a5943f56ed47fea52a549c23 100644
+index a1505362866f40509ac9d137d019eec03b223fbc..ab1d23acb9ba42f887dd12e2e7808105f5cb2895 100644
 --- a/modules/Legacy/pom.xml
 +++ b/modules/Legacy/pom.xml
 @@ -34,28 +34,6 @@
@@ -187,7 +187,7 @@ index 23779caab77558d01b4f56bd854ac7684499aa35..bf444c38f3ce0282a5943f56ed47fea5
              </exclusions>
          </dependency>
 diff --git a/modules/Main/pom.xml b/modules/Main/pom.xml
-index 263fc0e37567d05bb539b958668d5d9a30688aae..59947e2433e9602d4eb240956c035a5a8428a47d 100644
+index 9603fd895d247c8a5daf8b2bac61d3d31705782c..1b50b36c8fd9b09d0edb905708c0e7ca45e0015f 100644
 --- a/modules/Main/pom.xml
 +++ b/modules/Main/pom.xml
 @@ -1,4 +1,4 @@
